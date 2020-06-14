@@ -120,7 +120,7 @@ public class Renderer implements ApplicationListener{
             graphics.clear(Color.black);
         }else{
             Vec2 position = Tmp.v3.set(player);
-
+            /*
             if(player.isDead()){
                 TileEntity core = player.getClosestCore();
                 if(core != null){
@@ -130,7 +130,9 @@ public class Renderer implements ApplicationListener{
                         camera.position.lerpDelta(position, 0.08f);
                     }
                 }
-            }else if(control.input instanceof DesktopInput && !state.isPaused() && !griefWarnings.auto.cameraOverride()){
+            }else */
+            
+            if(control.input instanceof DesktopInput && !state.isPaused() && !griefWarnings.auto.cameraOverride()){
                 camera.position.lerpDelta(position, 0.08f);
             }
 

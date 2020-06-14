@@ -20,7 +20,9 @@ import mindustry.entities.*;
 import mindustry.entities.traits.*;
 import mindustry.game.*;
 import mindustry.game.griefprevention.PlayerStats;
+import mindustry.game.griefprevention.Auto.FreecamMode;
 import mindustry.gen.*;
+import mindustry.graphics.Pal;
 import mindustry.input.*;
 import mindustry.io.*;
 import mindustry.net.Administration.*;
@@ -558,7 +560,7 @@ public class Player extends Unit implements BuilderMinerTrait, ShooterTrait{
             data.unlockContent(mech);
         }
 
-        if(control.input instanceof MobileInput){
+        if(control.input instanceof MobileInput || (griefWarnings.auto.freecam == FreecamMode.FreeMove)){
             updateTouch();
         }else{
             updateKeyboard();
@@ -607,30 +609,29 @@ public class Player extends Unit implements BuilderMinerTrait, ShooterTrait{
         }
 
         if (!griefWarnings.auto.shootControlled) {
-            Vec2 vec = Core.input.mouseWorld(control.input.getMouseX(), control.input.getMouseY());
-            pointerX = vec.x;
-            pointerY = vec.y;
+          customShoot();
         }
-        updateShooting();
+        else {
+          updateShooting();
+        }
 
         movement.limit(speed).scl(Time.delta());
 
         if(canMove){
             velocity.add(movement.x, movement.y);
-        }else{
-            isShooting = false;
         }
+
         float prex = x, prey = y;
         updateVelocityStatus();
         moved = dst(prex, prey) > 0.001f;
 
         if(canMove){
             float baseLerp = mech.getRotationAlpha(this);
-            if(!isShooting() || !mech.turnCursor){
+            if(!isShooting || !mech.turnCursor){
                 if(!movement.isZero()){
                     rotation = Mathf.slerpDelta(rotation, mech.flying ? velocity.angle() : movement.angle(), 0.13f * baseLerp);
                 }
-            }else if (!griefWarnings.auto.shootControlled){
+            }else if (isShooting && !griefWarnings.auto.shootControlled){
                 float angle = control.input.mouseAngle(x, y);
                 this.rotation = Mathf.slerpDelta(this.rotation, angle, 0.1f * baseLerp);
             }
@@ -648,9 +649,46 @@ public class Player extends Unit implements BuilderMinerTrait, ShooterTrait{
         }
     }
 
+    protected void customShoot() {
+
+      
+      if (Core.input.keyDown(Binding.select)) {
+        Vec2 vec = Core.input.mouseWorld(control.input.getMouseX(), control.input.getMouseY());
+        pointerX = vec.x;
+        pointerY = vec.y;
+        updateShooting();
+        
+        return;
+        
+      } else {
+        if((target == null || target.getTeam() == team || !target.isValid() || dst(target) > getWeapon().bullet.range() + 30f) &&
+            !(target instanceof TileEntity && ((TileEntity)target).damaged() && target.isValid() && target.getTeam() == team && mech.canHeal && !(((TileEntity)target).block instanceof BuildBlock))){
+            target = null;
+        }
+        if(state.isEditor()){
+          target = null;
+        }
+        if(target != null) {
+          if (target.isValid() || (target instanceof TileEntity && ((TileEntity)target).damaged() && target.getTeam() == team &&
+              mech.canHeal && dst(target) < getWeapon().bullet.range())){
+              //rotate toward and shoot the target
+              if(mech.turnCursor){
+                  //rotation = Mathf.slerpDelta(rotation, angleTo(target), 0.2f);
+              }
+
+              Vec2 intercept = Predict.intercept(this, target, getWeapon().bullet.speed);
+
+              pointerX = intercept.x;
+              pointerY = intercept.y;
+              isShooting = true;
+              updateShooting();
+          }
+        }
+      }
+    }
     protected void updateTouch(){
-        if(Units.invalidateTarget(target, this) &&
-            !(target instanceof TileEntity && ((TileEntity)target).damaged() && target.isValid() && target.getTeam() == team && mech.canHeal && dst(target) < getWeapon().bullet.range() && !(((TileEntity)target).block instanceof BuildBlock))){
+        if((target == null || target.getTeam() == team || !target.isValid() || dst(target) > getWeapon().bullet.range() + 30f) &&
+            !(target instanceof TileEntity && ((TileEntity)target).damaged() && target.isValid() && target.getTeam() == team && mech.canHeal && !(((TileEntity)target).block instanceof BuildBlock))){
             target = null;
         }
 
@@ -660,7 +698,7 @@ public class Player extends Unit implements BuilderMinerTrait, ShooterTrait{
 
         if (!griefWarnings.auto.movementControlled) {
             float targetX = Core.camera.position.x, targetY = Core.camera.position.y;
-            float attractDst = 15f;
+            float attractDst = 20f;
             float speed = isBoosting && !mech.flying ? mech.boostSpeed : mech.speed;
 
             if(moveTarget != null && !moveTarget.isDead()){
@@ -688,9 +726,18 @@ public class Player extends Unit implements BuilderMinerTrait, ShooterTrait{
             movement.set((targetX - x) / Time.delta(), (targetY - y) / Time.delta()).limit(speed);
             movement.setAngle(Mathf.slerp(movement.angle(), velocity.angle(), 0.05f));
 
-            if(dst(targetX, targetY) < attractDst){
-                movement.setZero();
+            float dstRatio = dst(targetX, targetY) / attractDst;
+            if(dstRatio < 1) {
+
+              velocity.angleTo(targetX - x, targetX - x);
+              velocity.scl(Mathf.clamp(dstRatio + 0.2f, 0f, 1f) * Time.delta());
+              
+              if ( dst(targetX, targetY) < 1f) {
+                velocity.setZero();
+              }
             }
+
+            velocity.add(movement.scl(Time.delta()));
 
             float expansion = 3f;
 
@@ -702,7 +749,7 @@ public class Player extends Unit implements BuilderMinerTrait, ShooterTrait{
 
             isBoosting = collisions.overlapsTile(rect) || dst(targetX, targetY) > 85f;
 
-            velocity.add(movement.scl(Time.delta()));
+            
 
             if(velocity.len() <= 0.2f && mech.flying){
                 rotation += Mathf.sin(Time.time() + id * 99, 10f, 1f);
@@ -728,8 +775,9 @@ public class Player extends Unit implements BuilderMinerTrait, ShooterTrait{
         if(!isBuilding() && getMineTile() == null && !griefWarnings.auto.shootControlled){
 
             //autofire
-            if(target == null){
-                isShooting = false;
+            
+            if(target == null) {
+                //isShooting = false;
                 if(Core.settings.getBool("autotarget")){
                     target = Units.closestTarget(team, x, y, getWeapon().bullet.range(), u -> u.getTeam() != Team.derelict, u -> u.getTeam() != Team.derelict);
 
@@ -746,22 +794,8 @@ public class Player extends Unit implements BuilderMinerTrait, ShooterTrait{
                         setMineTile(null);
                     }
                 }
-            }else if(target.isValid() || (target instanceof TileEntity && ((TileEntity)target).damaged() && target.getTeam() == team &&
-            mech.canHeal && dst(target) < getWeapon().bullet.range())){
-                //rotate toward and shoot the target
-                if(mech.turnCursor){
-                    rotation = Mathf.slerpDelta(rotation, angleTo(target), 0.2f);
-                }
-
-                Vec2 intercept = Predict.intercept(this, target, getWeapon().bullet.speed);
-
-                pointerX = intercept.x;
-                pointerY = intercept.y;
-
-                updateShooting();
-                isShooting = true;
             }
-
+            customShoot();
         }
     }
 

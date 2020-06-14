@@ -31,13 +31,13 @@ import static mindustry.Vars.*;
 /* Auto mode */
 public class Auto {
     public enum Mode { GotoTile, GotoEntity, AssistEntity, UndoEntity }
-
+    public enum FreecamMode { None, Free, FreeMove }
     public boolean enabled = true;
     public boolean movementActive = false;
     public Mode mode;
     public boolean persist = false;
     public float targetDistance = 0.0f;
-    public boolean freecam = false;
+    public FreecamMode freecam = FreecamMode.None;
 
     public Tile targetTile;
     public Unit targetEntity;
@@ -156,6 +156,24 @@ public class Auto {
         return true;
     }
 
+    public void setFreecam() {
+      switch (freecam) {
+        case None:
+        cameraTarget.set(player.x, player.y);
+        freecam = FreecamMode.Free;
+          break;
+        case Free:
+        freecam = FreecamMode.FreeMove;
+          break;
+        case FreeMove:
+        freecam = FreecamMode.None;
+          break;
+      
+        default:
+          break;
+      }
+  }
+
     public void setFreecam(boolean enable) {
         setFreecam(enable, player.x, player.y);
     }
@@ -163,20 +181,20 @@ public class Auto {
     public void setFreecam(boolean enable, float x, float y) {
         if (enable) {
             cameraTarget.set(x, y);
-            freecam = true;
+            freecam = FreecamMode.Free;
         } else {
-            freecam = false;
+            freecam = FreecamMode.None;
         }
     }
 
     /** whether default camera handling should be disabled */
     public boolean cameraOverride() {
-        return overrideCamera || freecam;
+        return overrideCamera || (freecam != FreecamMode.None);
     }
 
     /** whether default movement handling should be disabled */
     public boolean movementOverride() {
-        return freecam;
+        return (freecam != FreecamMode.None);
     }
 
     public void update() {
@@ -368,8 +386,9 @@ public class Auto {
     /** Custom camera handling, if enabled */
     public void updateCamera() {
         if (!cameraOverride()) return;
-        if (freecam && !ui.chatfrag.shown()) {
+        if ((freecam != FreecamMode.None) && !ui.chatfrag.shown()) {
             float camSpeed = !Core.input.keyDown(Binding.dash) ? 10f : 25f;
+            camSpeed *= Core.input.keyDown(Binding.freecam_slowmove) ? 0.125f : 1f;
             cameraTarget.add(Tmp.v1.setZero().add(Core.input.axis(Binding.move_x), Core.input.axis(Binding.move_y)).nor().scl(Time.delta() * camSpeed));
 
             if(Core.input.keyDown(Binding.mouse_move)){
@@ -383,7 +402,7 @@ public class Auto {
 
     public void updateControls() {
         if (Core.scene.hasKeyboard()) return;
-        if (Core.input.keyTap(Binding.freecam)) setFreecam(!freecam);
+        if (Core.input.keyTap(Binding.freecam)) setFreecam();
     }
 
     /** Perform necessary cleanup after stopping */
