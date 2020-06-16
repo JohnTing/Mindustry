@@ -3,10 +3,12 @@ package mindustry.input;
 import arc.*;
 import arc.Graphics.*;
 import arc.Graphics.Cursor.*;
+import arc.graphics.Camera;
 import arc.graphics.Color;
 import arc.graphics.g2d.*;
 import arc.input.KeyCode;
 import arc.math.*;
+import arc.math.geom.Position;
 import arc.scene.*;
 import arc.scene.event.*;
 import arc.scene.ui.*;
@@ -543,18 +545,22 @@ public class DesktopInput extends InputHandler{
         if (griefWarnings.auto.freecam != FreecamMode.None) {
 
           if (griefWarnings.auto.freecam == FreecamMode.FreeMove) {
-            Draw.color(Color.yellow.a(0.5f));
+            Draw.color(Color.toFloatBits(1f, 1f, 0, 0.5f));
           }
           else if (Core.input.keyDown(Binding.freecam_slowmove)) {
-            Draw.color(Color.red.a(0.6f));
+            Draw.color(Color.toFloatBits(1f, 0, 0, 0.7f));
           }
           else {
-            Draw.color(Color.red.a(0.4f));
+            Draw.color(Color.toFloatBits(1f, 0, 0, 0.3f));
           }
           Lines.stroke(1f);
           float radius = Interpolation.swingIn.apply(1.1f);
-          Lines.circle(Core.camera.position.x, Core.camera.position.y, radius*5f);
-          Lines.spikes(Core.camera.position.x, Core.camera.position.y, 4f * radius, 6f * radius, 4, Time.time() * 1.5f);
+
+          float spikesTime = Time.time();
+
+          Lines.circle(Core.camera.position.x, Core.camera.position.y, radius * 5f);
+
+          Lines.spikes(Core.camera.position.x, Core.camera.position.y, 4f * radius, 6f * radius, 4, spikesTime * 1.5f);
         }
 
         Draw.reset();

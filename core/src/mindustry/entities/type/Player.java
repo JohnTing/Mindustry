@@ -616,7 +616,7 @@ public class Player extends Unit implements BuilderMinerTrait, ShooterTrait{
         }
 
         movement.limit(speed).scl(Time.delta());
-
+        
         if(canMove){
             velocity.add(movement.x, movement.y);
         }
