@@ -121,7 +121,7 @@ public class Renderer implements ApplicationListener{
         }else{
             Vec2 position = Tmp.v3.set(player);
 
-            if(player.isDead()){
+            if(player.isDead() && !griefWarnings.auto.cameraOverride()){
                 TileEntity core = player.getClosestCore();
                 if(core != null){
                     if(player.spawner == null){

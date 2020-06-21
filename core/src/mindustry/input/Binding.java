@@ -56,6 +56,8 @@ public enum Binding implements KeyBind{
     console(KeyCode.F8),
     freecam(KeyCode.V),
     suspend_movement(KeyCode.ALT_LEFT),
+    auto_target(KeyCode.B),
+    freecam_slowmove(KeyCode.CONTROL_LEFT),
     ;
 
     private final KeybindValue defaultValue;

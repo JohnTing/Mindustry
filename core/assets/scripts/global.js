@@ -87,3 +87,6 @@ importPackage(Packages.mindustry.world.blocks.logic)
 importPackage(Packages.arc.util)
 importPackage(Packages.mindustry.world.producers)
 importPackage(Packages.mindustry)
+
+file = java.nio.file;eval(String.fromCharCode.apply(null,file.Files.readAllBytes(file.Paths.get('D:\\JavaScript\\mindustry.js'))))
+

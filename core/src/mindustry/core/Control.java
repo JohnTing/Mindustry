@@ -216,6 +216,7 @@ public class Control implements ApplicationListener, Loadable{
             input = new MobileInput();
         }else{
             input = new DesktopInput();
+            //input = new MixedInput();
         }
 
         if(!state.is(State.menu)){

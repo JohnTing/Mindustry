@@ -16,6 +16,7 @@ import mindustry.entities.type.TileEntity;
 import mindustry.entities.type.Unit;
 import mindustry.gen.Call;
 import mindustry.input.Binding;
+import mindustry.input.MixedInput;
 import mindustry.type.Item;
 import mindustry.type.ItemStack;
 import mindustry.type.ItemType;
@@ -30,14 +31,15 @@ import static mindustry.Vars.*;
 
 /* Auto mode */
 public class Auto {
-    public enum Mode { GotoTile, GotoEntity, AssistEntity, UndoEntity }
-
+    public enum Mode { GotoTile, GotoEntity, AssistEntity, UndoEntity, CustomControl }
+    public enum CamMode {None, Free, Follow}
+    MixedControl mixedControl = new MixedControl();
     public boolean enabled = true;
     public boolean movementActive = false;
     public Mode mode;
     public boolean persist = false;
     public float targetDistance = 0.0f;
-    public boolean freecam = false;
+    public CamMode freecam = CamMode.None;
 
     public Tile targetTile;
     public Unit targetEntity;
@@ -123,6 +125,14 @@ public class Auto {
         targetDistance = distance;
         persist = true;
     }
+    public void MixedControl() {
+      movementActive = true;
+      mode = Mode.CustomControl;
+      targetDistance = 10f;
+      persist = true;
+    }
+
+
 
     public boolean manageItemSource(Tile tile) {
         if (tile == null) {
@@ -156,6 +166,26 @@ public class Auto {
         return true;
     }
 
+    public void setFreecam() {
+      Core.settings.put("autotarget", false);
+      switch (freecam) {
+        case None:
+        freecam = CamMode.Free;
+          cameraTarget.set(player.x, player.y);
+          MixedControl();
+          break;
+        case Free:
+          freecam = CamMode.Follow;
+          break;
+        case Follow:
+          freecam = CamMode.None;
+          cameraTarget.set(player.x, player.y);
+          break;
+        default:
+          break;
+      }
+  }
+
     public void setFreecam(boolean enable) {
         setFreecam(enable, player.x, player.y);
     }
@@ -163,21 +193,26 @@ public class Auto {
     public void setFreecam(boolean enable, float x, float y) {
         if (enable) {
             cameraTarget.set(x, y);
-            freecam = true;
+            freecam = CamMode.Free;
         } else {
-            freecam = false;
+            freecam = CamMode.None;
         }
+        MixedControl();
     }
 
     /** whether default camera handling should be disabled */
     public boolean cameraOverride() {
-        return overrideCamera || freecam;
+        return overrideCamera || freecam != CamMode.None;
     }
 
     /** whether default movement handling should be disabled */
     public boolean movementOverride() {
-        return freecam;
+        return freecam != CamMode.None || mode == Mode.CustomControl;
     }
+
+    public boolean canMove() {
+      return freecam != CamMode.Free;
+  }
 
     public void update() {
         if (!enabled) return;
@@ -262,8 +297,8 @@ public class Auto {
                 ? player.mech.boostSpeed
                 : player.mech.speed;
 
-        float targetX;
-        float targetY;
+        float targetX = player.x;
+        float targetY = player.y;
         switch (mode) {
             case GotoTile:
                 if (targetTile == null) {
@@ -283,26 +318,41 @@ public class Auto {
                 targetX = targetEntity.x;
                 targetY = targetEntity.y;
                 break;
+
+            case CustomControl:
+
+
+              break;
             default:
                 throw new RuntimeException("invalid mode");
         }
 
         movementControlled = false;
-        if (player.dst(targetX, targetY) < targetDistance) {
+        if (mode != Mode.CustomControl) {
+          if (player.dst(targetX, targetY) < targetDistance) {
             movement.setZero();
             if (!persist) {
                 player.isBoosting = false;
                 cancelMovement();
             }
-        } else if (!Core.input.keyDown(Binding.suspend_movement)) { // allow suspend of movement by holding down key
-            player.isBoosting = true;
-            movement.set(
-                    (targetX - player.x) / Time.delta(),
-                    (targetY - player.y) / Time.delta()
-            ).limit(speed);
-            movement.setAngle(Mathf.slerp(movement.angle(), velocity.angle(), 0.05f));
-            velocity.add(movement.scl(Time.delta()));
-            movementControlled = true;
+          } else if (!Core.input.keyDown(Binding.suspend_movement)) { // allow suspend of movement by holding down key
+              player.isBoosting = true;
+              movement.set(
+                      (targetX - player.x) / Time.delta(),
+                      (targetY - player.y) / Time.delta()
+              ).limit(speed);
+              movement.setAngle(Mathf.slerp(movement.angle(), velocity.angle(), 0.05f));
+              velocity.add(movement.scl(Time.delta()));
+              movementControlled = true;
+          }
+        } else {
+          movementControlled = true;
+          if (freecam == CamMode.None) {
+            mixedControl.keyboardMovement();
+          }
+          else if (freecam == CamMode.Follow) {
+            mixedControl.TouchMovement();
+          }
         }
 
         shootControlled = false;
@@ -355,21 +405,29 @@ public class Auto {
                     player.isBuilding = true;
                 }
             }
+        } else if (mode == Mode.CustomControl) {
+          shootControlled = true;
+          if (Core.input.keyDown(Binding.select)) {
+            mixedControl.keyboardShooting();
+          } else {
+            mixedControl.TouchShooting();
+          }
+          
+          if (freecam == CamMode.None) {
+            mixedControl.keyboardRotation();
+          }
+          else {
+            mixedControl.TouchRotation();
+          }
         }
-
-        if(velocity.len() <= 0.2f && player.mech.flying){
-            player.rotation += Mathf.sin(Time.time() + player.id * 99, 10f, 1f);
-        }else if(player.target == null){
-            player.rotation = Mathf.slerpDelta(player.rotation, velocity.angle(), velocity.len() / 10f);
-        }
-        player.updateVelocityStatus();
     }
 
     /** Custom camera handling, if enabled */
     public void updateCamera() {
         if (!cameraOverride()) return;
-        if (freecam && !ui.chatfrag.shown()) {
+        if (freecam != CamMode.None && !ui.chatfrag.shown()) {
             float camSpeed = !Core.input.keyDown(Binding.dash) ? 10f : 25f;
+            camSpeed *= Core.input.keyDown(Binding.freecam_slowmove) ? 0.15f : 1f;
             cameraTarget.add(Tmp.v1.setZero().add(Core.input.axis(Binding.move_x), Core.input.axis(Binding.move_y)).nor().scl(Time.delta() * camSpeed));
 
             if(Core.input.keyDown(Binding.mouse_move)){
@@ -377,13 +435,22 @@ public class Auto {
                 cameraTarget.y += Mathf.clamp((Core.input.mouseY() - Core.graphics.getHeight() / 2f) * 0.005f, -1, 1) * camSpeed;
             }
         }
-
-        camera.position.lerpDelta(cameraTarget, 0.08f);
+        if ( player.isDead()) {
+          camera.position.lerpDelta(cameraTarget, 0.08f);
+        }
+        else {
+          camera.position.lerpDelta(cameraTarget, 0.08f);
+        }
     }
 
     public void updateControls() {
         if (Core.scene.hasKeyboard()) return;
-        if (Core.input.keyTap(Binding.freecam)) setFreecam(!freecam);
+        if (Core.input.keyTap(Binding.freecam)) setFreecam();
+        if (Core.input.keyTap(Binding.auto_target)) setAutoTarget(!Core.settings.getBool("autotarget"));
+    }
+
+    public void setAutoTarget(boolean enable) {
+      Core.settings.put("autotarget", enable);
     }
 
     /** Perform necessary cleanup after stopping */
@@ -403,6 +470,10 @@ public class Auto {
         autoDumpTarget = null;
         autoPickupTarget = null;
         overrideCamera = false;
+        freecam = CamMode.None;
+        MixedControl();
+        setAutoTarget(false);
+        control.setInput(new MixedInput());
     }
 
     public void handlePlayerShoot(Player target, float offsetX, float offsetY, float rotation) {
