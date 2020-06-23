@@ -318,10 +318,7 @@ public class Auto {
                 targetX = targetEntity.x;
                 targetY = targetEntity.y;
                 break;
-
             case CustomControl:
-
-
               break;
             default:
                 throw new RuntimeException("invalid mode");
@@ -351,7 +348,7 @@ public class Auto {
             mixedControl.keyboardMovement();
           }
           else if (freecam == CamMode.Follow) {
-            mixedControl.TouchMovement();
+            mixedControl.touchMovement();
           }
         }
 
@@ -407,17 +404,17 @@ public class Auto {
             }
         } else if (mode == Mode.CustomControl) {
           shootControlled = true;
-          if (Core.input.keyDown(Binding.select)) {
+          if (Core.input.keyTap(Binding.select) || Core.input.keyDown(Binding.select) || Core.input.keyRelease(Binding.select)) {
             mixedControl.keyboardShooting();
           } else {
-            mixedControl.TouchShooting();
+            mixedControl.touchShooting();
           }
           
           if (freecam == CamMode.None) {
             mixedControl.keyboardRotation();
           }
           else {
-            mixedControl.TouchRotation();
+            mixedControl.touchRotation();
           }
         }
     }
@@ -435,12 +432,7 @@ public class Auto {
                 cameraTarget.y += Mathf.clamp((Core.input.mouseY() - Core.graphics.getHeight() / 2f) * 0.005f, -1, 1) * camSpeed;
             }
         }
-        if ( player.isDead()) {
-          camera.position.lerpDelta(cameraTarget, 0.08f);
-        }
-        else {
-          camera.position.lerpDelta(cameraTarget, 0.08f);
-        }
+        camera.position.lerpDelta(cameraTarget, 0.08f);
     }
 
     public void updateControls() {

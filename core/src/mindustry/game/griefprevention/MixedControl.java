@@ -1,6 +1,5 @@
 package mindustry.game.griefprevention;
 
-import mindustry.content.Mechs;
 import mindustry.entities.Predict;
 import mindustry.entities.Units;
 import mindustry.entities.traits.TargetTrait;
@@ -8,9 +7,8 @@ import mindustry.entities.type.Player;
 import mindustry.entities.type.SolidEntity;
 import mindustry.entities.type.TileEntity;
 import mindustry.game.Team;
-import mindustry.game.griefprevention.Auto.CamMode;
 import mindustry.input.Binding;
-import mindustry.type.Mech;
+import mindustry.input.MixedInput;
 import mindustry.type.Weapon;
 import mindustry.world.Tile;
 import mindustry.world.blocks.BuildBlock;
@@ -18,34 +16,20 @@ import arc.Core;
 import arc.math.Angles;
 import arc.math.Mathf;
 import arc.math.geom.Geometry;
-import arc.math.geom.Position;
 import arc.math.geom.Rect;
 import arc.math.geom.Vec2;
 import arc.scene.ui.TextField;
 import arc.util.Time;
+
 
 import static mindustry.Vars.*;
 
 import java.lang.reflect.Field;
 
 public class MixedControl {
-/*
-  public TargetTrait target;
-  public TargetTrait moveTarget;
-  public Team team;
-  public Mech mech;
-  // public boolean isBoosting;
-  public float x;
-  public float y;*/
   public Rect rect = new Rect();
   
   public boolean moved;
-  /*
-  public boolean isShooting;
-  public int id;
-  public float pointerX;
-  public float pointerY;
-*/
   public Vec2 movement;
   public Vec2 velocity;
 
@@ -110,10 +94,6 @@ public class MixedControl {
   public boolean isShooting(){
     return player.isShooting();
   }
-  /*
-  public void copyPlayer() {
-
-  }*/
 
   public void keyboardMovement() {
     Tile tile = world.tileWorld(player.x, player.y);
@@ -159,22 +139,30 @@ public class MixedControl {
     movement.limit(speed).scl(Time.delta());
 
   }
-  
+  boolean forcedShooting = false;
   public void keyboardShooting() {
 
-    Vec2 vec = Core.input.mouseWorld(control.input.getMouseX(), control.input.getMouseY());
-    player.pointerX = vec.x;
-    player.pointerY = vec.y;
-
-    if (Core.input.keyDown(Binding.select)) {
-      player.target = null;
-      player.isShooting = true;
-    }
-
-    if ((ui.minimapfrag.shown())) {
-      player.isShooting = false;
+    if (Core.input.keyTap(Binding.select) && !Core.scene.hasMouse() ) {
+      if(control.input != null && control.input instanceof MixedInput) {
+        if(control.input.canShoot() && ((MixedInput)control.input).checkShooting()) {
+          forcedShooting = true;
+        }
+      }
     }
     
+    if(forcedShooting) {
+      Vec2 vec = Core.input.mouseWorld(control.input.getMouseX(), control.input.getMouseY());
+      player.pointerX = vec.x;
+      player.pointerY = vec.y;
+    }
+    player.isShooting = forcedShooting;
+
+
+    if (Core.input.keyRelease(Binding.select)) {
+      forcedShooting = false;
+      player.isShooting = false;
+      return;
+    }
   }
 
   public void keyboardRotation() {
@@ -192,7 +180,7 @@ public class MixedControl {
     }
   }
 
-  public void TouchRotation() {
+  public void touchRotation() {
     float baseLerp = player.mech.getRotationAlpha(player);
     if(isShooting()) {
       Vec2 vec = new Vec2(player.x, player.y);
@@ -204,35 +192,9 @@ public class MixedControl {
     }else if(player.target == null){
       player.rotation = Mathf.slerpDelta(player.rotation, velocity.angle(), velocity.len() / 10f);
     }
-
-
-
-    /*
-    boolean canMove = (!Core.scene.hasKeyboard() || ui.minimapfrag.shown()) && griefWarnings.auto.canMove();
-    if(canMove) {
-      float baseLerp = player.mech.getRotationAlpha(player);
-      player.rotation = Mathf.slerpDelta(player.rotation, player.mech.flying ? velocity.angle() : movement.angle(), 0.13f * baseLerp);
-    }*/
-    /*
-    if(canMove){
-      float baseLerp = player.mech.getRotationAlpha(player);
-        if(!isShooting() || !player.mech.turnCursor){
-          if(!movement.isZero()){
-            player.rotation = Mathf.slerpDelta(player.rotation, player.mech.flying ? velocity.angle() : movement.angle(), 0.13f * baseLerp);
-          }
-      }else if (player.target == null){
-          float angle = control.input.mouseAngle(player.x, player.y);
-          player.rotation = Mathf.slerpDelta(player.rotation, angle, 0.1f * baseLerp);
-      }else if(player.mech.turnCursor) {
-          player.rotation = Mathf.slerpDelta(player.rotation, angleTo(player.target), 0.2f);
-      }
-    }
-    */
-
-
   }
 
-  public void TouchMovement() {
+  public void touchMovement() {
     float targetX = Core.camera.position.x, targetY = Core.camera.position.y;
     float attractDst = 15f;
     float speed = player.isBoosting && !player.mech.flying ? player.mech.boostSpeed : player.mech.speed;
@@ -245,7 +207,7 @@ public class MixedControl {
       velocity.angleTo(targetX - player.x, targetX - player.x);
       velocity.scl(Mathf.clamp(dstRatio + 0.2f, 0f, 1f) * Time.delta());
       
-      if ( dst(targetX, targetY) < 1f) {
+      if ( dst(targetX, targetY) < 2f) {
         velocity.setZero();
       }
     }
@@ -275,7 +237,7 @@ public class MixedControl {
     }
   }
 
-  public void TouchShooting() {
+  public void touchShooting() {
     if(!(!isBuilding() && getMineTile() == null)) {
       return;
     }
@@ -318,40 +280,6 @@ public class MixedControl {
         player.pointerY = intercept.y;
 
         player.isShooting = true;
-        // updateShooting();
-        
-    }
-  }
-
-  
-
-  public void updateTouch() {
-    if(Units.invalidateTarget(player.target, player) &&
-        !(player.target instanceof TileEntity && ((TileEntity)player.target).damaged() && player.target.isValid() && player.target.getTeam() == player.getTeam() && player.mech.canHeal && player.lastPosition().dst(player.target) < player.getWeapon().bullet.range() && !(((TileEntity)player.target).block instanceof BuildBlock))){
-          player.target = null; 
-    }
-
-    if(state.isEditor()){
-      player.target = null;
-    }
-
-    //update shooting if not building, not mining and there's ammo left
-    // if(!isBuilding() && getMineTile() == null && !griefWarnings.auto.shootControlled){
-    if(!isBuilding() && getMineTile() == null){
-        //autofire
-        
-    }
-  }
-
-  public void updateShooting(){
-  if(!state.isEditor() && isShooting() && player.mech.canShoot(player)){
-
-      if(!player.mech.turnCursor){
-          //shoot forward ignoring cursor
-          player.mech.weapon.update(player, player.x + Angles.trnsx(player.rotation, player.mech.weapon.targetDistance), player.y + Angles.trnsy(player.rotation, player.mech.weapon.targetDistance));
-      }else{
-        player.mech.weapon.update(player, player.pointerX, player.pointerY);
-      }
     }
   }
 }

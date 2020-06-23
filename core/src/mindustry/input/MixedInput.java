@@ -1,36 +1,24 @@
 package mindustry.input;
 
 import arc.*;
-import arc.Graphics.*;
-import arc.Graphics.Cursor.*;
 import arc.graphics.Color;
 import arc.graphics.g2d.*;
 import arc.input.KeyCode;
 import arc.math.*;
-import arc.scene.*;
-import arc.scene.event.*;
-import arc.scene.ui.*;
-import arc.scene.ui.layout.*;
-import arc.util.ArcAnnotate.*;
+
 import arc.util.*;
-import mindustry.*;
+
 import mindustry.core.GameState.*;
 import mindustry.entities.Units;
 import mindustry.entities.traits.TargetTrait;
-import mindustry.entities.traits.BuilderTrait.*;
 import mindustry.entities.type.TileEntity;
 import mindustry.entities.type.Unit;
-import mindustry.game.EventType.*;
 import mindustry.game.griefprevention.Auto.CamMode;
-import mindustry.game.*;
-import mindustry.gen.*;
 import mindustry.graphics.*;
-import mindustry.ui.*;
 import mindustry.world.*;
-
-import static arc.Core.scene;
 import static mindustry.Vars.*;
-import static mindustry.input.PlaceMode.*;
+
+import mindustry.entities.traits.BuilderTrait.BuildRequest;
 
 public class MixedInput extends DesktopInput{
     
@@ -48,6 +36,61 @@ public class MixedInput extends DesktopInput{
 
         checkTargets(worldx, worldy);
         return false;
+    }
+    
+    boolean tryTileTapped(Tile tile) {
+      tile = tile.link();
+
+        boolean consumed = false;
+
+        //check if tapped block is configurable
+        if(tile.block().configurable && tile.interactable(player.getTeam())){
+            consumed = true;
+        }else if(!frag.config.hasConfigMouse()){ //make sure a configuration fragment isn't on the cursor
+            //then, if it's shown and the current block 'agrees' to hide, hide it.
+            if(frag.config.isShown() && frag.config.getSelectedTile().block().onConfigureTileTapped(frag.config.getSelectedTile(), tile)){
+                consumed = true;
+            }
+            if(frag.config.isShown()){
+                consumed = true;
+            }
+        }
+        //consume tap event if necessary
+        if(tile.interactable(player.getTeam()) && tile.block().consumesTap){
+            consumed = true;
+        }else if(tile.interactable(player.getTeam()) && tile.block().synthetic() && !consumed){
+            if(tile.block().hasItems && tile.entity.items.total() > 0){
+                consumed = true;
+            }
+        }
+        return consumed;
+    }
+
+    public boolean checkShooting() {
+      if(Core.input.keyTap(Binding.select) && !Core.scene.hasMouse()){
+        
+        //int cursorX = tileX(Core.input.mouseX());
+        //int cursorY = tileY(Core.input.mouseY());
+        //BuildRequest req = getRequest(cursorX, cursorY);
+        Tile selected = tileAt(Core.input.mouseX(), Core.input.mouseY());
+
+        if(Core.input.keyTap(Binding.break_block)){
+        }else if(!selectRequests.isEmpty()){
+        }else if(isPlacing()){
+        // }else if(req != null && !req.breaking && mode == none && !req.initialized){
+        //}else if(req != null && !req.breaking && !req.initialized){
+        //}else if(req != null && req.breaking){
+        }else if(selected != null){
+            //only begin shooting if there's no cursor event
+            if(!tryTileTapped(selected) && !tryTapPlayer(Core.input.mouseWorld().x, Core.input.mouseWorld().y) && (player.buildQueue().size == 0 || !player.isBuilding) && !droppingItem &&
+            !tryBeginMine(selected) && player.getMineTile() == null && !Core.scene.hasKeyboard()){
+              return true;
+            }
+        }else if(!Core.scene.hasKeyboard()){ //if it's out of bounds, shooting is just fine
+          return true;
+        }
+      }
+      return false;
     }
     
     void checkTargets(float x, float y){
@@ -103,7 +146,7 @@ public class MixedInput extends DesktopInput{
             Draw.color(Color.toFloatBits(1f, 1f, 0, 0.5f));
           }
           else if (Core.input.keyDown(Binding.freecam_slowmove)) {
-            Draw.color(Color.toFloatBits(1f, 0, 0, 0.7f));
+            Draw.color(Color.toFloatBits(1f, 0, 0, 0.9f));
           }
           else {
             Draw.color(Color.toFloatBits(1f, 0, 0, 0.3f));
