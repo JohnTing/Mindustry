@@ -38,7 +38,7 @@ public class MixedInput extends DesktopInput{
         return false;
     }
     
-    boolean tryTileTapped(Tile tile) {
+    boolean canTapped(Tile tile) {
       tile = tile.link();
 
         boolean consumed = false;
@@ -83,8 +83,8 @@ public class MixedInput extends DesktopInput{
         //}else if(req != null && req.breaking){
         }else if(selected != null){
             //only begin shooting if there's no cursor event
-            if(!tryTileTapped(selected) && !tryTapPlayer(Core.input.mouseWorld().x, Core.input.mouseWorld().y) && (player.buildQueue().size == 0 || !player.isBuilding) && !droppingItem &&
-            !tryBeginMine(selected) && player.getMineTile() == null && !Core.scene.hasKeyboard()){
+            if(!canTapped(selected) && !tryTapPlayer(Core.input.mouseWorld().x, Core.input.mouseWorld().y) && (player.buildQueue().size == 0 || !player.isBuilding) && !droppingItem &&
+            !canMine(selected) && player.getMineTile() == null && !Core.scene.hasKeyboard()){
               return true;
             }
         }else if(!Core.scene.hasKeyboard()){ //if it's out of bounds, shooting is just fine

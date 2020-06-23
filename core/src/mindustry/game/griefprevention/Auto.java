@@ -424,7 +424,7 @@ public class Auto {
         if (!cameraOverride()) return;
         if (freecam != CamMode.None && !ui.chatfrag.shown()) {
             float camSpeed = !Core.input.keyDown(Binding.dash) ? 10f : 25f;
-            camSpeed *= Core.input.keyDown(Binding.freecam_slowmove) ? 0.15f : 1f;
+            camSpeed *= Core.input.keyDown(Binding.freecam_slowmove) ? 0.1f : 1f;
             cameraTarget.add(Tmp.v1.setZero().add(Core.input.axis(Binding.move_x), Core.input.axis(Binding.move_y)).nor().scl(Time.delta() * camSpeed));
 
             if(Core.input.keyDown(Binding.mouse_move)){

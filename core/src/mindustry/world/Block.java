@@ -540,7 +540,12 @@ public class Block extends BlockStorage{
     }
 
     public void setBars(){
-        bars.add("health", entity -> new Bar("blocks.health", Pal.health, entity::healthf).blink(Color.white));
+        //bars.add("health", entity -> new Bar("blocks.health", Pal.health, entity::healthf).blink(Color.white));
+        bars.add("health", entity -> new Bar(() ->
+        (Core.bundle.format("blocks.health") + ": " + Math.round(entity.health()*10)*0.1f + "/" + Math.round(entity.maxHealth()*10)*0.1f),
+        () -> Pal.health,
+        entity::healthf).blink(Color.white));
+        
 
         if(hasLiquids){
             Func<TileEntity, Liquid> current;
