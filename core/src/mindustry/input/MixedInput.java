@@ -48,9 +48,10 @@ public class MixedInput extends DesktopInput{
             consumed = true;
         }else if(!frag.config.hasConfigMouse()){ //make sure a configuration fragment isn't on the cursor
             //then, if it's shown and the current block 'agrees' to hide, hide it.
+            /*
             if(frag.config.isShown() && frag.config.getSelectedTile().block().onConfigureTileTapped(frag.config.getSelectedTile(), tile)){
                 consumed = true;
-            }
+            }*/
             if(frag.config.isShown()){
                 consumed = true;
             }

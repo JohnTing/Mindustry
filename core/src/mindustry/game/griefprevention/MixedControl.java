@@ -173,7 +173,7 @@ public class MixedControl {
           if(!movement.isZero()){
             player.rotation = Mathf.slerpDelta(player.rotation, player.mech.flying ? velocity.angle() : movement.angle(), 0.13f * baseLerp);
           }
-      }else if (Core.input.keyDown(Binding.select)){
+      }else if (Core.input.keyDown(Binding.select) && player.isShooting()){
           float angle = control.input.mouseAngle(player.x, player.y);
           player.rotation = Mathf.slerpDelta(player.rotation, angle, 0.1f * baseLerp);
       }
