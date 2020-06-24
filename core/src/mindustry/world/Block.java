@@ -540,11 +540,23 @@ public class Block extends BlockStorage{
     }
 
     public void setBars(){
-        //bars.add("health", entity -> new Bar("blocks.health", Pal.health, entity::healthf).blink(Color.white));
-        bars.add("health", entity -> new Bar(() ->
-        (Core.bundle.format("blocks.health") + ": " + Math.round(entity.health()*10)*0.1f + "/" + Math.round(entity.maxHealth()*10)*0.1f),
-        () -> Pal.health,
-        entity::healthf).blink(Color.white));
+        if( world != null && world.getMap() != null && world.getMap().rules() != null) {
+          bars.add("health", entity -> new Bar(() ->
+          (Core.bundle.format("blocks.health") + ": " + String.format("%.1f/%.1f", 
+          entity.health()*world.getMap().rules().blockHealthMultiplier, 
+          entity.maxHealth()*world.getMap().rules().blockHealthMultiplier)),
+          () -> Pal.health,
+          entity::healthf).blink(Color.white));
+        }
+        else {
+          bars.add("health", entity -> new Bar(() ->
+          (Core.bundle.format("blocks.health") + ": " + String.format("%.1f/%.1f", 
+          entity.health(), 
+          entity.maxHealth())),
+          () -> Pal.health,
+          entity::healthf).blink(Color.white));
+        }
+
         
 
         if(hasLiquids){

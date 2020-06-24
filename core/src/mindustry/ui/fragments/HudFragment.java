@@ -251,7 +251,7 @@ public class HudFragment extends Fragment{
                 info.row();
                 info.label(() -> ping.get(netClient.getPing())).visible(net::client).left().style(Styles.outlineLabel);
                 info.row();
-                info.table(Tex.clear, t -> t.add(new Bar(() -> "Health: " + player.health + " / " + player.maxHealth(), () -> Pal.health, () -> player.health / player.maxHealth()).blink(Color.white))
+                info.table(Tex.clear, t -> t.add(new Bar(() -> String.format("Health: %.1f / %.1f", player.health, player.maxHealth()), () -> Pal.health, () -> player.health / player.maxHealth()).blink(Color.white))
                         .grow()).fillX().width(300f).height(20f).pad(4);
             }).top().left();
         });

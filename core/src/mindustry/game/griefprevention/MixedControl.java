@@ -202,12 +202,12 @@ public class MixedControl {
     movement.setAngle(Mathf.slerp(movement.angle(), velocity.angle(), 0.05f));
 
     float dstRatio = dst(targetX, targetY) / attractDst; 
-    if(dst(targetX, targetY) < attractDst){
-
-      velocity.angleTo(targetX - player.x, targetX - player.x);
-      velocity.scl(Mathf.clamp(dstRatio + 0.2f, 0f, 1f) * Time.delta());
+    if(dstRatio < 1){
+      //movement.setAngle(-movement.angleTo(velocity));
+      velocity.setAngle(movement.angle());
+      velocity.setLength(Math.min(velocity.len(), player.mech.maxSpeed * dstRatio));
       
-      if ( dst(targetX, targetY) < 2f) {
+      if ( dst(targetX, targetY) < 1f) {
         velocity.setZero();
       }
     }
