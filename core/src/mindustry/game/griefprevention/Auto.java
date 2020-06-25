@@ -126,9 +126,12 @@ public class Auto {
         persist = true;
     }
     public void MixedControl() {
+      MixedControl(15f);
+    }
+    public void MixedControl(float distance) {
       movementActive = true;
       mode = Mode.CustomControl;
-      targetDistance = 10f;
+      targetDistance = distance;
       persist = true;
     }
 

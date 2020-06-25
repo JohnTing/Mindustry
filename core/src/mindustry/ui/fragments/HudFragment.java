@@ -349,7 +349,7 @@ public class HudFragment extends Fragment{
 
         //persistent tileinfo
         parent.fill(t -> {
-            t.top().visible(() -> griefWarnings.tileInfoHud);
+            t.top().left().margin(80,240,0,0).visible(() -> griefWarnings.tileInfoHud);
             t.add(new TileInfoHud());
         });
 
