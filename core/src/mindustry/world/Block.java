@@ -422,7 +422,7 @@ public class Block extends BlockStorage{
             buildCost += stack.amount * stack.item.cost;
         }
         buildCost *= buildCostMultiplier;
-
+        
         if(consumes.has(ConsumeType.power)) hasPower = true;
         if(consumes.has(ConsumeType.item)) hasItems = true;
         if(consumes.has(ConsumeType.liquid)) hasLiquids = true;
@@ -540,24 +540,29 @@ public class Block extends BlockStorage{
     }
 
     public void setBars(){
-        if( world != null && world.getMap() != null && world.getMap().rules() != null) {
+        if( state != null && state.rules != null) {
           bars.add("health", entity -> new Bar(() ->
           (Core.bundle.format("blocks.health") + ": " + String.format("%.1f/%.1f", 
-          entity.health()*world.getMap().rules().blockHealthMultiplier, 
-          entity.maxHealth()*world.getMap().rules().blockHealthMultiplier)),
+          entity.health() * state.rules.blockHealthMultiplier, 
+          entity.maxHealth() * state.rules.blockHealthMultiplier)),
+          () -> Pal.health,
+          entity::healthf).blink(Color.white));
+        }else if( world != null && world.getMap() != null && world.getMap().rules() != null) {
+          bars.add("health", entity -> new Bar(() ->
+          (Core.bundle.format("blocks.health") + ": " + String.format("%.1f/%.1f", 
+          entity.health() * world.getMap().rules().blockHealthMultiplier, 
+          entity.maxHealth() * world.getMap().rules().blockHealthMultiplier)),
           () -> Pal.health,
           entity::healthf).blink(Color.white));
         }
         else {
           bars.add("health", entity -> new Bar(() ->
-          (Core.bundle.format("blocks.health") + ": " + String.format("%.1f/%.1f", 
+          (Core.bundle.format("blocks.health") + " " + String.format("%.1f/%.1f", 
           entity.health(), 
           entity.maxHealth())),
           () -> Pal.health,
           entity::healthf).blink(Color.white));
         }
-
-        
 
         if(hasLiquids){
             Func<TileEntity, Liquid> current;

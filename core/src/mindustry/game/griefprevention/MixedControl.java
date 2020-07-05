@@ -244,8 +244,8 @@ public class MixedControl {
 
     if (player.target != null) {
 
-      if(Units.invalidateTarget(player.target, player) &&
-      !(player.target instanceof TileEntity && ((TileEntity)player.target).damaged() && player.target.isValid() && player.target.getTeam() == player.getTeam() && player.mech.canHeal && player.dst(player.target) + 4f < getWeapon().bullet.range() && !(((TileEntity)player.target).block instanceof BuildBlock))){
+      if((player.target.getTeam() == player.getTeam() || !player.target.isValid() || player.dst(player.target) > getWeapon().bullet.range() + 30f) &&
+      !(player.target instanceof TileEntity && ((TileEntity)player.target).damaged() && player.target.isValid() && player.target.getTeam() == player.getTeam() && player.mech.canHeal && !(((TileEntity)player.target).block instanceof BuildBlock))){
         player.target = null;
       }
 
