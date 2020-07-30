@@ -131,7 +131,14 @@ public class MixedControl {
 
     if(canMove){
       velocity.add(movement.x, movement.y);
-  }
+    }
+    if(Core.input.keyDown(Binding.dash) && player.mech.flying) {
+      
+      float maxSpeed = player.isBoosting && !player.mech.flying ? player.mech.compoundSpeedBoost : player.mech.compoundSpeed;
+      movement.setLength(maxSpeed).scl(Time.delta());
+      velocity.set(movement);
+    }
+    
     float prex = player.x, prey = player.y;
     //updateVelocityStatus();
     moved = dst(prex, prey) > 0.001f;
@@ -139,25 +146,30 @@ public class MixedControl {
     movement.limit(speed).scl(Time.delta());
 
   }
+
   boolean forcedShooting = false;
   public void keyboardShooting() {
 
-    if (Core.input.keyTap(Binding.select) && !Core.scene.hasMouse() ) {
+    if (Core.input.keyTap(Binding.select) && !Core.scene.hasMouse()) {
       if(control.input != null && control.input instanceof MixedInput) {
         if(control.input.canShoot() && ((MixedInput)control.input).checkShooting()) {
           forcedShooting = true;
         }
       }
     }
-    
+    if(player.target != null) {
+      forcedShooting = true;
+    }
+
     if(forcedShooting) {
       Vec2 vec = Core.input.mouseWorld(control.input.getMouseX(), control.input.getMouseY());
       player.pointerX = vec.x;
       player.pointerY = vec.y;
     }
-    player.isShooting = forcedShooting;
-
-
+    if(forcedShooting == true) {
+      player.isShooting = forcedShooting;
+    }
+    
     if (Core.input.keyRelease(Binding.select)) {
       forcedShooting = false;
       player.isShooting = false;
@@ -196,18 +208,20 @@ public class MixedControl {
 
   public void touchMovement() {
     float targetX = Core.camera.position.x, targetY = Core.camera.position.y;
-    float attractDst = 15f;
+    float attractDst = 50f;
     float speed = player.isBoosting && !player.mech.flying ? player.mech.boostSpeed : player.mech.speed;
+    
     movement.set((targetX - player.x) / Time.delta(), (targetY - player.y) / Time.delta()).limit(speed);
     movement.setAngle(Mathf.slerp(movement.angle(), velocity.angle(), 0.05f));
 
     float dstRatio = dst(targetX, targetY) / attractDst; 
     if(dstRatio < 1){
-      //movement.setAngle(-movement.angleTo(velocity));
+      velocity.add(movement.scl(Time.delta()));
       velocity.setAngle(movement.angle());
       velocity.setLength(Math.min(velocity.len(), player.mech.maxSpeed * dstRatio));
-      
-      if ( dst(targetX, targetY) < 1f) {
+      movement.setZero();
+
+      if(dst(targetX, targetY) <= 1) {
         velocity.setZero();
       }
     }
@@ -223,8 +237,11 @@ public class MixedControl {
     player.isBoosting = collisions.overlapsTile(rect) || dst(targetX, targetY) > 85f;
 
     velocity.add(movement.scl(Time.delta()));
-    
-    
+    /*
+    if(Core.input.keyDown(Binding.dash) && player.mech.flying) {
+      float maxSpeed = player.isBoosting && !player.mech.flying ? player.mech.compoundSpeedBoost : player.mech.compoundSpeed;
+      velocity.setLength(maxSpeed);
+    }*/
 
     float lx = player.x, ly = player.y;
     //updateVelocityStatus();
