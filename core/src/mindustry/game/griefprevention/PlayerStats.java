@@ -15,7 +15,7 @@ public class PlayerStats {
     // don't prevent garbage collection
     public WeakReference<Player> wrappedPlayer;
     public Ratelimit rotateRatelimit = new Ratelimit(50, 1000);
-    public Ratelimit configureRatelimit = new Ratelimit(50, 1000);
+    public Ratelimit configureRatelimit = new Ratelimit(65, 1000);
     public boolean autoTraceRequested = false;
     public TraceInfo trace;
     public boolean gone = false;
