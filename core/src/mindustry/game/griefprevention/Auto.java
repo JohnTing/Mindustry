@@ -235,6 +235,8 @@ public class Auto {
             autoDumpTarget = null;
             return;
         }
+        if(player.isDead()) return;
+
         ItemStack stack = player.item();
         // if (!timer.get(itemTransferTimer, 50)) return;
         if (stack.amount >= player.mech.itemCapacity -1 &&
@@ -253,8 +255,11 @@ public class Auto {
             autoPickupTargetItem = null;
             return;
         }
+        if(player.isDead()) return;
+
         ItemStack stack = player.item();
-        if (stack.amount > 0 || stack.item != item) return;
+        if (stack.amount > 0 && stack.item != item) return;
+        if (stack.amount != 0) return;
         
         int amount = player.mech.itemCapacity - stack.amount;
         amount = Math.min(amount, tile.entity.items.get(item));

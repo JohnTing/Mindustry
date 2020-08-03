@@ -498,6 +498,7 @@ public class CommandHandler {
                 reply("automatically dumping player inventory to tile " + griefWarnings.formatTile(tile));
                 break;
             }
+            case "pick":
             case "pickup":
             case "pickuptarget": {
                 // usage: /auto pickuptarget [<x> <y>] <item>
