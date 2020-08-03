@@ -473,6 +473,7 @@ public class CommandHandler {
                 reply("automatically configuring item source " + griefWarnings.formatTile(tile));
                 break;
             }
+            case "dump":
             case "dumptarget": {
                 // usage: /auto dumptarget [<x> <y>]
                 Tile tile = null;
@@ -497,6 +498,7 @@ public class CommandHandler {
                 reply("automatically dumping player inventory to tile " + griefWarnings.formatTile(tile));
                 break;
             }
+            case "pickup":
             case "pickuptarget": {
                 // usage: /auto pickuptarget [<x> <y>] <item>
                 Item item;
@@ -508,10 +510,10 @@ public class CommandHandler {
                         return;
                     }
 
-                    item = content.items().find(a -> a.name.equals(ctx.args.get(2)));
+                    item = content.items().find(a -> simpleComparison(a.name, ctx.args.get(2)));
                     tile = getCursorTile();
                 } else if (ctx.args.size() == 5) {
-                    item = content.items().find(a -> a.name.equals(ctx.args.get(4)));
+                    item = content.items().find(a -> simpleComparison(a.name, ctx.args.get(4)));
                     tile = findTile(ctx.args.get(2), ctx.args.get(3));
                 } else {
                     reply("invalid arguments");
@@ -536,6 +538,12 @@ public class CommandHandler {
             default:
                 reply("unknown subcommand");
         }
+    }
+    public boolean simpleComparison(String a, String b) {
+      if(a == null || b == null) {
+        return false;
+      }
+      return a.contains(b);     
     }
 
     public void nextwave(CommandContext ctx) {
