@@ -96,13 +96,16 @@ public class GriefWarnings {
     public boolean sendMessage(String message, boolean throttled) {
         // if (!net.active()) return false;
         if (message.length() > maxTextLength) {
+            /*
             ui.chatfrag.addMessage(
                     "[scarlet]WARNING: the following grief warning exceeded maximum allowed chat length and was not sent",
                     null);
+            
             ui.chatfrag.addMessage(message, null);
             ui.chatfrag.addMessage("Message length was [accent]" + message.length(), null);
             Log.warn("[antigrief] Oversize message not sent (size " + message.length() + "): " + message);
-            return false;
+            return false;*/
+            message = message.substring(0, maxTextLength-6) + "...";
         }
         if (!Instant.now().isAfter(nextWarningTime) && throttled) return false;
         nextWarningTime = Instant.now().plusSeconds(1);
