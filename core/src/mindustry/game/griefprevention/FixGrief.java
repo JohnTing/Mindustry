@@ -75,10 +75,12 @@ public class FixGrief {
 
     // will massively attempt to reconnect every power node to every block in range that accepts power,
     // including other power nodes
-    public void fixPower(boolean redundant) {
+    public void fixPower(boolean redundant, boolean all) {
         iterateAllTiles(tile -> {
             if (!(tile.block() instanceof PowerNode)) return;
             if (tile.getTeam() != player.getTeam()) return;
+            if (!all && player.dst(tile) > 200) return;
+
             getPotentialPowerLinks(tile, redundant, link -> {
                 int value = link.pos();
                 boolean contains = tile.entity.power.links.contains(value);

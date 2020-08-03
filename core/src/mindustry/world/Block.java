@@ -572,9 +572,11 @@ public class Block extends BlockStorage{
             }else{
                 current = entity -> entity.liquids.current();
             }
-            bars.add("liquid", entity -> new Bar(() -> entity.liquids.get(current.get(entity)) <= 0.001f ? Core.bundle.get("bar.liquid") : current.get(entity).localizedName,
+            
+            bars.add("liquid", entity -> new Bar(() -> entity.liquids.get(current.get(entity)) <= 0.001f ? Core.bundle.get("bar.liquid") : current.get(entity).localizedName + ": " + String.format("%.1f/%d", entity.liquids.get(current.get(entity)), (int)liquidCapacity),
                     () -> current.get(entity).barColor(), () -> entity.liquids.get(current.get(entity)) / liquidCapacity));
         }
+        
 
         if(hasPower && consumes.hasPower()){
             ConsumePower cons = consumes.getPower();

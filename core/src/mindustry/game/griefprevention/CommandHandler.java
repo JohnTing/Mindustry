@@ -128,7 +128,8 @@ public class CommandHandler {
      */
     public void fixPower(CommandContext ctx) {
         boolean redundant = ctx.args.contains("redundant");
-        griefWarnings.fixer.fixPower(redundant);
+        boolean all = ctx.args.contains("all");
+        griefWarnings.fixer.fixPower(redundant, all);
         reply("[green]Done");
     }
 
