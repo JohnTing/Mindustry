@@ -239,7 +239,7 @@ public class Auto {
 
         ItemStack stack = player.item();
         // if (!timer.get(itemTransferTimer, 50)) return;
-        if (stack.amount >= player.mech.itemCapacity -1 &&
+        if (stack.amount > 0 &&
                 tile.block().acceptStack(stack.item, stack.amount, tile, player) > 0 &&
                 !player.isTransferring) {
             Call.transferInventory(player, tile);
@@ -260,7 +260,7 @@ public class Auto {
         ItemStack stack = player.item();
         if (stack.amount > 0 && stack.item != item) return;
         if (stack.amount != 0) return;
-        
+        v
         int amount = player.mech.itemCapacity - stack.amount;
         amount = Math.min(amount, tile.entity.items.get(item));
         if (amount == 0) return;
