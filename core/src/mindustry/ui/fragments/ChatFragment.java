@@ -18,6 +18,10 @@ import mindustry.ui.*;
 
 import static arc.Core.*;
 import static mindustry.Vars.net;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import static mindustry.Vars.*;
 
 public class ChatFragment extends Table{
@@ -231,12 +235,54 @@ public class ChatFragment extends Table{
     }
 
     public void addMessage(String message, String sender){
+        message = messageToLightColor(message);
+        
         messages.insert(0, new ChatMessage(message, sender));
 
         fadetime += 1f;
         fadetime = Math.min(fadetime, messagesShown) + 1f;
         
         if(scrollPos > 0) scrollPos++;
+    }
+
+    public String messageToLightColor(String message) {
+
+      Pattern p = Pattern.compile("\\[(.+?)\\]");
+      Matcher m = p.matcher(message);
+      StringBuffer sb = new StringBuffer();
+      
+      while (m.find()) {
+          m.appendReplacement(sb, "[" + lightColor(m.group(1)) + "]");
+      }
+      m.appendTail(sb);
+      
+      return sb.toString();
+    }
+
+    public String lightColor(String hex) {     
+
+      Color color = Colors.getColors().get(hex);
+      if(color != null) {
+        return lightColor2(color);
+      }
+
+      if (hex.matches("^#[0-9A-f]{6}$")) {
+        hex = hex.substring(1);
+        color = Color.valueOf(hex);
+        return lightColor2(color);
+      }
+      return hex;
+    }
+
+    public String lightColor2(Color color) {     
+
+      color = color.cpy();
+      
+      
+      if (color.r + color.g < 1.0f) {
+        color.lerp(Color.white, 0.7f);
+      }
+      return "#" + color.toString();
     }
 
     private static class ChatMessage{

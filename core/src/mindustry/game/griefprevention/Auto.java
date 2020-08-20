@@ -259,11 +259,11 @@ public class Auto {
 
         ItemStack stack = player.item();
         if (stack.amount > 0 && stack.item != item) return;
-        if (stack.amount != 0) return;
         
         int amount = player.mech.itemCapacity - stack.amount;
         amount = Math.min(amount, tile.entity.items.get(item));
         if (amount == 0) return;
+        if (amount < 10) return;
         // if (!timer.get(requestItemTimer, 50)) return;
         Call.requestItem(player, tile, item, amount);
     }
