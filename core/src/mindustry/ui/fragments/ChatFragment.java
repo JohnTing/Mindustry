@@ -246,6 +246,7 @@ public class ChatFragment extends Table{
     }
 
     public String messageToLightColor(String message) {
+      message = java.util.regex.Matcher.quoteReplacement(message);  
 
       Pattern p = Pattern.compile("\\[(.+?)\\]");
       Matcher m = p.matcher(message);
