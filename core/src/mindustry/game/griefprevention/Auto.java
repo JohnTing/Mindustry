@@ -264,7 +264,7 @@ public class Auto {
         amount = Math.min(amount, tile.entity.items.get(item));
         if (amount == 0) return;
         
-        if(timer.get(requestItemTimer, 100) && (amount > 10 || stack.amount < 10)) {
+        if(timer.get(requestItemTimer, 100) || (amount > 10 || stack.amount < 10)) {
           Call.requestItem(player, tile, item, amount);
         }
     }
