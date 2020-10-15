@@ -301,8 +301,9 @@ public class Renderer implements ApplicationListener{
     }
 
     public void clampScale(){
-        float s = Scl.scl(1f);
-        targetscale = Mathf.clamp(targetscale, minScale(), Math.round(s * 6));
+        float min = Scl.scl(0.5f);
+        float max = Scl.scl(12f);
+        targetscale = Mathf.clamp(targetscale, min, max);
     }
 
     public float getDisplayScale(){

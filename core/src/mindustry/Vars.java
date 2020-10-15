@@ -15,6 +15,7 @@ import mindustry.core.*;
 import mindustry.entities.*;
 import mindustry.game.*;
 import mindustry.game.EventType.*;
+import mindustry.game.griefprevention.GriefWarnings;
 import mindustry.gen.*;
 import mindustry.input.*;
 import mindustry.io.*;
@@ -199,6 +200,8 @@ public class Vars implements Loadable{
     public static BlockIndexer indexer;
     public static Pathfinder pathfinder;
 
+    public static GriefWarnings griefWarnings;
+
     public static Control control;
     public static Logic logic;
     public static Renderer renderer;
@@ -263,6 +266,9 @@ public class Vars implements Loadable{
         spawner = new WaveSpawner();
         indexer = new BlockIndexer();
         pathfinder = new Pathfinder();
+
+        griefWarnings = new GriefWarnings();
+
         bases = new BaseRegistry();
 
         state = new GameState();
