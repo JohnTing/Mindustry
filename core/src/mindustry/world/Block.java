@@ -345,21 +345,13 @@ public class Block extends UnlockableContent{
 
     public void setBars(){
         // bars.add("health", entity -> new Bar("blocks.health", Pal.health, entity::healthf).blink(Color.white));
-        if( state != null && state.rules != null) {
-            bars.add("health", entity -> new Bar(() ->
-            (Core.bundle.format("blocks.health") + ": " + String.format("%.1f/%.1f", 
-            entity.health() * state.rules.blockHealthMultiplier, 
-            entity.maxHealth() * state.rules.blockHealthMultiplier)),
-            () -> Pal.health,
-            entity::healthf).blink(Color.white));
-          } else {
-            bars.add("health", entity -> new Bar(() ->
-            (Core.bundle.format("blocks.health") + " " + String.format("%.1f/%.1f", 
-            entity.health(), 
-            entity.maxHealth())),
-            () -> Pal.health,
-            entity::healthf).blink(Color.white));
-        }
+
+        bars.add("health", entity -> new Bar(() ->
+        (Core.bundle.format("blocks.health") + ": " + String.format("%.1f/%.1f", 
+        entity.health() * state.rules.blockHealthMultiplier, 
+        entity.maxHealth() * state.rules.blockHealthMultiplier)),
+        () -> Pal.health,
+        entity::healthf).blink(Color.white));
 
         if(hasLiquids){
             Func<Building, Liquid> current;
