@@ -144,6 +144,9 @@ public class GriefWarnings {
         return Mathf.dst(x, y, nearestCore.x, nearestCore.y);
     }
     public float getDistanceToCore(Unit unit, Tile tile) {
+      if (tile == null) {
+        return Integer.MAX_VALUE;
+      }
         return getDistanceToCore(unit, tile.x, tile.y);
     }
 
