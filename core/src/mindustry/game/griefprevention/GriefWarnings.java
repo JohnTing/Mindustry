@@ -141,6 +141,9 @@ public class GriefWarnings {
           return Integer.MAX_VALUE;
         }
         Tile nearestCore = unit.closestCore().tile();
+        if (nearestCore == null) {
+          return Integer.MAX_VALUE;
+        }
         return Mathf.dst(x, y, nearestCore.x, nearestCore.y);
     }
     public float getDistanceToCore(Unit unit, Tile tile) {
