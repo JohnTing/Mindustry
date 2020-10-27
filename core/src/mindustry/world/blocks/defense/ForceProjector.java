@@ -16,6 +16,7 @@ import mindustry.logic.*;
 import mindustry.world.*;
 import mindustry.world.consumers.*;
 import mindustry.world.meta.*;
+import mindustry.ui.Bar;
 
 import static mindustry.Vars.*;
 
@@ -56,6 +57,15 @@ public class ForceProjector extends Block{
     @Override
     public boolean outputsItems(){
         return false;
+    }
+
+    @Override
+    public void setBars(){
+        super.setBars();
+        
+        bars.add("heat", (ForceBuild entity) -> new Bar(() -> 
+        String.format("%s: %d/%d", Core.bundle.format("bar.heat"), (int)(entity.buildup),  (int)(breakage + phaseShieldBoost)), 
+        () -> Pal.lightOrange, () -> entity.buildup/(breakage + phaseShieldBoost)));
     }
 
     @Override
