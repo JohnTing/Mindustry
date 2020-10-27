@@ -137,7 +137,8 @@ public class OverlayRenderer{
             Vec2 vec = Core.input.mouseWorld(input.getMouseX(), input.getMouseY());
             Building build = world.buildWorld(vec.x, vec.y);
 
-            if(build != null && build.team == player.team()){
+            // if(build != null && build.team == player.team()){
+            if(build != null){
                 build.drawSelect();
                 if(!build.enabled && build.block.drawDisabled){
                    build.drawDisabled();
@@ -158,6 +159,12 @@ public class OverlayRenderer{
             Drawf.square(build.x, build.y, build.block.size * tilesize/2f + 2f);
             if(!unit.within(build, unit.hitSize * 2f)){
                 Drawf.arrow(unit.x, unit.y, build.x, build.y, unit.hitSize *2f, 4f);
+                
+                Lines.stroke(3f, Pal.gray);
+                Lines.dashLine(unit.x, unit.y, build.x, build.y, (int)(unit.dst(build) / 8));
+
+                Lines.stroke(1f, Pal.placing);
+                Lines.dashLine(unit.x, unit.y, build.x, build.y, (int)(unit.dst(build) / 8));
             }
         }
 

@@ -345,7 +345,14 @@ public class Block extends UnlockableContent{
     }
 
     public void setBars(){
-        bars.add("health", entity -> new Bar("stat.health", Pal.health, entity::healthf).blink(Color.white));
+        // bars.add("health", entity -> new Bar("blocks.health", Pal.health, entity::healthf).blink(Color.white));
+
+        bars.add("health", entity -> new Bar(() ->
+        (Core.bundle.format("stat.health") + ": " + String.format("%.1f/%.1f", 
+        entity.health() * state.rules.blockHealthMultiplier, 
+        entity.maxHealth() * state.rules.blockHealthMultiplier)),
+        () -> Pal.health,
+        entity::healthf).blink(Color.white));
 
         if(hasLiquids){
             Func<Building, Liquid> current;
@@ -355,8 +362,9 @@ public class Block extends UnlockableContent{
             }else{
                 current = entity -> entity.liquids == null ? Liquids.water : entity.liquids.current();
             }
-            bars.add("liquid", entity -> new Bar(() -> entity.liquids.get(current.get(entity)) <= 0.001f ? Core.bundle.get("bar.liquid") : current.get(entity).localizedName,
-            () -> current.get(entity).barColor(), () -> entity.liquids.get(current.get(entity)) / liquidCapacity));
+            // bars.add("liquid", entity -> new Bar(() -> entity.liquids.get(current.get(entity)) <= 0.001f ? Core.bundle.get("bar.liquid") : current.get(entity).localizedName, () -> current.get(entity).barColor(), () -> entity.liquids.get(current.get(entity)) / liquidCapacity));
+            bars.add("liquid", entity -> new Bar(() -> entity.liquids.get(current.get(entity)) <= 0.001f ? Core.bundle.get("bar.liquid") : current.get(entity).localizedName + ": " + String.format("%.1f/%d", entity.liquids.get(current.get(entity)), (int)liquidCapacity),
+                    () -> current.get(entity).barColor(), () -> entity.liquids.get(current.get(entity)) / liquidCapacity));
         }
 
         if(hasPower && consumes.hasPower()){

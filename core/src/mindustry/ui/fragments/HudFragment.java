@@ -246,12 +246,27 @@ public class HudFragment extends Fragment{
                 info.update(() -> info.setTranslation(state.rules.waves || state.isEditor() ? 0f : -Scl.scl(dsize * 4 + 3), 0));
                 IntFormat fps = new IntFormat("fps");
                 IntFormat ping = new IntFormat("ping");
-
                 info.label(() -> fps.get(Core.graphics.getFramesPerSecond())).left()
                 .style(Styles.outlineLabel).name("fps");
                 info.row();
                 info.label(() -> ping.get(netClient.getPing())).visible(net::client).left()
                 .style(Styles.outlineLabel).name("ping");
+                
+                info.row();
+
+                info.label(() -> String.format("mouseWorld: %.1f,%.1f", Core.input.mouseWorld().getX(), Core.input.mouseWorld().getY()))
+                .visible(true).left().style(Styles.outlineLabel).name("mouseWorld");
+                info.row();
+                info.label(() -> String.format("mouseTile: %d,%d", (int)((Core.input.mouseWorld().getX()+4)/8), (int)((Core.input.mouseWorld().getY()+4)/8)))
+                .visible(true).left().style(Styles.outlineLabel).name("mouseTile");
+
+                //info.label(() -> String.format("%.1f %.1f", world.toTile(Core.input.mouseWorld().getX()), Core.input.mouseY()))
+                //.visible(net::client).left().style(Styles.outlineLabel).name("mouseTile");
+                info.row();
+                
+                info.table(Tex.clear, t -> t.add(new Bar(() -> String.format("Health: %.1f / %.1f", player.unit().health, player.unit().maxHealth), () -> Pal.health, () -> player.unit().healthf()).blink(Color.white))
+                .grow()).fillX().width(300f).height(20f).pad(4);
+                info.row();
             }).top().left();
         });
 
@@ -341,6 +356,12 @@ public class HudFragment extends Fragment{
             t.bottom().visible(() -> control.saves.isSaving());
             t.add("@saving").style(Styles.outlineLabel);
         });
+        /*
+        //persistent tileinfo
+        parent.fill(t -> {
+          t.top().left().margin(80,240,0,0);
+          t.add(new TileInfoHud());
+        });*/
 
         parent.fill(p -> {
             p.name = "hudtext";

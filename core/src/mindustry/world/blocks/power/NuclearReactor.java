@@ -106,6 +106,8 @@ public class NuclearReactor extends PowerGenerator{
 
             heat = Mathf.clamp(heat);
 
+            griefWarnings.handleThoriumReactorheat(tile, heat);
+
             if(heat >= 0.999f){
                 Events.fire(Trigger.thoriumReactorOverheat);
                 kill();
