@@ -13,6 +13,7 @@ import mindustry.entities.traits.*;
 import mindustry.entities.type.*;
 import mindustry.entities.type.BaseEntity;
 import mindustry.graphics.*;
+import mindustry.ui.Bar;
 import mindustry.world.*;
 import mindustry.world.consumers.*;
 import mindustry.world.meta.*;
@@ -62,6 +63,16 @@ public class ForceProjector extends Block{
     public boolean outputsItems(){
         return false;
     }
+
+    
+    @Override
+    public void setBars(){
+        super.setBars();
+        
+        bars.add("items", entity -> new Bar(() ->  String.format("%d/%d", (int)((ForceEntity)entity).buildup, (int)breakage), () -> Pal.lightOrange, () -> (float)((ForceEntity)entity).buildup/breakage));
+
+    }
+
 
     @Override
     public void load(){
@@ -163,7 +174,7 @@ public class ForceProjector extends Block{
         Draw.reset();
     }
 
-    class ForceEntity extends TileEntity{
+    public class ForceEntity extends TileEntity{
         ShieldEntity shield;
         boolean broken = true;
         float buildup = 0f;
