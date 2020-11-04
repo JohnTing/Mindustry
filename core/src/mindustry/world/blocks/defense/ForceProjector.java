@@ -17,6 +17,7 @@ import mindustry.ui.*;
 import mindustry.world.*;
 import mindustry.world.consumers.*;
 import mindustry.world.meta.*;
+import mindustry.ui.Bar;
 
 import static mindustry.Vars.*;
 
@@ -57,14 +58,29 @@ public class ForceProjector extends Block{
     @Override
     public void setBars(){
         super.setBars();
-        bars.add("shield", (ForceBuild entity) -> new Bar("stat.shieldhealth", Pal.accent, () -> entity.broken ? 0f : 1f - entity.buildup / (shieldHealth + phaseShieldBoost * entity.phaseHeat)).blink(Color.white));
+        bars.add("shield", (ForceBuild entity) -> 
+        new Bar(() -> entity.broken ? 
+        String.format("%s: %d/%d", Core.bundle.format("bar.heat"), (int)(entity.buildup),  (int)(shieldHealth)) :
+        String.format("%s: %d/%d", Core.bundle.format("stat.shieldhealth"), (int)(shieldHealth + phaseShieldBoost * entity.phaseHeat - entity.buildup),  (int)(shieldHealth + phaseShieldBoost * entity.phaseHeat)),
+        () -> entity.broken ? Pal.lightOrange : Pal.accent, 
+        () -> entity.broken ? entity.buildup / (shieldHealth + phaseShieldBoost * entity.phaseHeat) : 
+        1f - entity.buildup / (shieldHealth + phaseShieldBoost * entity.phaseHeat)).blink(Color.white));
     }
 
     @Override
     public boolean outputsItems(){
         return false;
     }
-
+    /*
+    @Override
+    public void setBars(){
+        super.setBars();
+        
+        bars.add("heat", (ForceBuild entity) -> new Bar(() -> 
+        String.format("%s: %d/%d", Core.bundle.format("bar.heat"), (int)(entity.buildup),  (int)(breakage + phaseShieldBoost)), 
+        () -> Pal.lightOrange, () -> entity.buildup/(breakage + phaseShieldBoost)));
+    }
+    */
     @Override
     public void setStats(){
         super.setStats();

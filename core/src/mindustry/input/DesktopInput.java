@@ -3,6 +3,7 @@ package mindustry.input;
 import arc.*;
 import arc.Graphics.*;
 import arc.Graphics.Cursor.*;
+import arc.graphics.Color;
 import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.math.geom.*;
@@ -43,7 +44,10 @@ public class DesktopInput extends InputHandler{
     /** Whether player is currently deleting removal requests. */
     public boolean deleting = false, shouldShoot = false, panning = false;
     /** Mouse pan speed. */
-    public float panScale = 0.005f, panSpeed = 4.5f, panBoostSpeed = 9f;
+    public float panScale = 0.005f, panSpeed = 3f, panBoostSpeed = 9f;
+
+    public int freecam = 0;
+    Vec2 cameraTarget = new Vec2();
 
     @Override
     public void buildUI(Group group){
@@ -170,6 +174,39 @@ public class DesktopInput extends InputHandler{
             }
         }
 
+        
+
+        if (freecam != 0) {
+            if (Core.input.keyDown(Binding.slowcam)) {
+                Draw.color(Color.toFloatBits(1f, 0f, 0, 0.9f));
+            }
+            else if (freecam == 1) {
+                Draw.color(Color.toFloatBits(1f, 0, 0, 0.5f));
+            }
+            else if (freecam == 2) {
+                Draw.color(Color.toFloatBits(1f, 1f, 0, 0.3f));
+            }
+            Lines.stroke(1f);
+            float radius = Interp.swingIn.apply(1.1f);
+
+            float spikesTime = Time.time();
+
+            if(Core.settings.getBool("autotarget")) {
+              Lines.poly(Core.camera.position.x, Core.camera.position.y, 4, 6f * radius, spikesTime * 1.5f);
+            }
+            else {
+              Lines.circle(Core.camera.position.x, Core.camera.position.y, radius * 5f);
+            }
+
+            Lines.spikes(Core.camera.position.x, Core.camera.position.y, 4f * radius, 6f * radius, 4, spikesTime * 1.5f);
+        }
+
+        
+
+
+
+
+
         Draw.reset();
     }
 
@@ -194,13 +231,26 @@ public class DesktopInput extends InputHandler{
         }
 
         //TODO awful UI state checking code
-        if(((player.dead() || state.isPaused()) && !ui.chatfrag.shown()) && (!scene.hasField() && !scene.hasDialog())){
+
+        if (freecam == 0) {
+          cameraTarget.set(camera.position);
+        }
+        if (freecam != 0) {
+            float camSpeeds = !Core.input.keyDown(Binding.boost) ? 10f : 25f;
+            camSpeeds *= Core.input.keyDown(Binding.slowcam) ? 0.12f : 1f;
+            
+            cameraTarget.add(Tmp.v1.setZero().add(Core.input.axis(Binding.move_x), Core.input.axis(Binding.move_y)).nor().scl(Time.delta * camSpeeds));
+            camera.position.lerpDelta(cameraTarget, 0.08f);
+        }
+        else if(((player.dead() || state.isPaused()) && !ui.chatfrag.shown()) && (!scene.hasField() && !scene.hasDialog())){
             if(input.keyDown(Binding.mouse_move)){
                 panCam = true;
             }
             panning = false;
-
+            
             Core.camera.position.add(Tmp.v1.setZero().add(Core.input.axis(Binding.move_x), Core.input.axis(Binding.move_y)).nor().scl(camSpeed));
+
+
         }else if(!player.dead() && !panning){
             Core.camera.position.lerpDelta(player, Core.settings.getBool("smoothcamera") ? 0.08f : 1f);
         }
@@ -569,6 +619,14 @@ public class DesktopInput extends InputHandler{
                 Core.settings.put("lasersopacity", 0);
             }
         }
+
+        if(input.keyTap(Binding.freecam)) {
+            cameraTarget.set(camera.position);
+            freecam += 1;
+            if(freecam > 2) {
+                freecam = 0;
+            }
+        }
     }
 
     @Override
@@ -622,6 +680,12 @@ public class DesktopInput extends InputHandler{
             movement.add(input.mouseWorld().sub(player).scl(1f / 25f * speed)).limit(speed);
         }
 
+        if(freecam == 2) {
+            movement.add(camera.position.cpy().sub(player).scl(1f / 25f * speed)).limit(speed);
+        }
+        if(freecam == 1) {
+            movement.setZero();
+        }
         float mouseAngle = Angles.mouseAngle(unit.x, unit.y);
         boolean aimCursor = omni && player.shooting && unit.type.hasWeapons() && unit.type.faceTarget && !boosted && unit.type.rotateShooting;
 
