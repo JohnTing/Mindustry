@@ -37,6 +37,9 @@ public class Build{
         Block previous = tile.block();
         Block sub = ConstructBlock.get(previous.size);
 
+        if(unit != null && unit.isPlayer()) {
+          mindustry.Vars.tileInfoManagement.addInfo(unit.getPlayer(), mindustry.game.griefprevention.TileInfo.ActionType.breakBlock, tile, previous);
+        }
         Seq<Building> prevBuild = new Seq<>(1);
         if(tile.build != null) prevBuild.add(tile.build);
 
@@ -94,6 +97,10 @@ public class Build{
         result.placeBegan(tile, previous);
 
         Core.app.post(() -> Events.fire(new BlockBuildBeginEvent(tile, team, unit, false)));
+
+        if(unit != null && unit.isPlayer()) {
+          mindustry.Vars.tileInfoManagement.addInfo(unit.getPlayer(), mindustry.game.griefprevention.TileInfo.ActionType.placeBlock, tile, result);
+        }
     }
 
     /** Returns whether a tile can be placed at this location by this team. */

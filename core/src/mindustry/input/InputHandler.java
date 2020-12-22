@@ -292,6 +292,11 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
         }
 
         if(player != null) tile.lastAccessed = player.name;
+
+        if(player != null){
+          mindustry.Vars.tileInfoManagement.addInfo(player, mindustry.game.griefprevention.TileInfo.ActionType.rotate, tile.tile(), tile.block);
+        }
+
         tile.rotation = Mathf.mod(tile.rotation + Mathf.sign(direction), 4);
         tile.updateProximity();
         tile.noSleep();
@@ -302,6 +307,15 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
         if(tile == null) return;
         if(net.server() && (!Units.canInteract(player, tile) ||
             !netServer.admins.allowAction(player, ActionType.configure, tile.tile, action -> action.config = value))) throw new ValidateException(player, "Player cannot configure a tile.");
+
+        // power split check
+        if (value instanceof Integer integer) {
+            Building other = world.build(integer);
+            boolean contains = tile.power != null && tile.power.links != null && tile.power.links.contains(integer);
+            if (contains) {
+                mindustry.Vars.tileInfoManagement.checkPowerSplit(tile, player);
+            }
+        }
         tile.configured(player == null || player.dead() ? null : player.unit(), value);
         Core.app.post(() -> Events.fire(new ConfigEvent(tile, player, value)));
     }

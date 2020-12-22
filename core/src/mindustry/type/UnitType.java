@@ -163,8 +163,34 @@ public class UnitType extends UnlockableContent{
         table.table(bars -> {
             bars.defaults().growX().height(20f).pad(4);
 
-            bars.add(new Bar("stat.health", Pal.health, unit::healthf).blink(Color.white));
+            // bars.add(new Bar("stat.health", Pal.health, unit::healthf).blink(Color.white));
+            
+            bars.add(new Bar(() ->
+            (Core.bundle.format("stat.health") + " " + String.format("%.1f/%.1f", 
+            unit.health() * state.rules.unitHealthMultiplier, 
+            unit.maxHealth() * state.rules.unitHealthMultiplier)),
+            () -> Pal.health,
+            unit::healthf).blink(Color.white));
+            
             bars.row();
+            if (unit.armor() > 0.1f) {
+              bars.add(new Bar(() ->
+              (Core.bundle.format("stat.shieldhealth") + " " + String.format("%.1f (%d)", 
+              unit.shield(), 
+              (int)unit.armor())),
+              () -> Pal.accent,
+              () -> (unit.shield() / unit.maxHealth())).blink(Color.white));
+              bars.row();
+
+            } else {
+
+              bars.add(new Bar(() ->
+              (Core.bundle.format("stat.shieldhealth") + " " + String.format("%.1f", 
+              unit.shield() )),
+              () -> Pal.accent,
+              () -> (unit.shield() / unit.maxHealth())).blink(Color.white));
+              bars.row();
+            }
 
             if(state.rules.unitAmmo){
                 bars.add(new Bar(ammoType.icon + " " + Core.bundle.get("stat.ammo"), ammoType.barColor, () -> unit.ammo / ammoCapacity));
@@ -177,6 +203,15 @@ public class UnitType extends UnlockableContent{
             table.add(Blocks.microProcessor.emoji() + " " + Core.bundle.get("units.processorcontrol")).growX().left();
             table.row();
             table.label(() -> Iconc.settings + " " + (long)unit.flag + "").color(Color.lightGray).growX().wrap().left();
+
+            LogicAI logicAI = (LogicAI)unit.controller();
+            if(logicAI.controller instanceof Building) {
+
+                Building build = (Building)(logicAI.controller);
+                table.row();
+                table.add(Blocks.microProcessor.emoji() + " " + String.format("[lightgray]%d, %d[]", 
+                    (int)(build.x/8), (int)(build.y/8))).growX().left();
+            }
         }
         
         table.row();
