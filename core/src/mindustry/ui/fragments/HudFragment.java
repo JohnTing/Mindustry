@@ -14,11 +14,13 @@ import arc.scene.ui.ImageButton.*;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
+import mindustry.Vars;
 import mindustry.annotations.Annotations.*;
 import mindustry.content.*;
 import mindustry.core.GameState.*;
 import mindustry.ctype.*;
 import mindustry.game.EventType.*;
+import mindustry.game.griefprevention.TileInfoHud;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
@@ -101,7 +103,8 @@ public class HudFragment extends Fragment{
             t.add(new Minimap()).name("minimap");
             t.row();
             //position
-            t.label(() -> player.tileX() + "," + player.tileY())
+            t.label(() -> String.format(" %d.%d\n(%d,%d)", player.tileX(), player.tileY(), 
+            (int)(Core.input.mouseWorldX()+4)/8, (int)(Core.input.mouseWorldY()+4)/8))
             .visible(() -> Core.settings.getBool("position"))
             .touchable(Touchable.disabled)
             .name("position");
@@ -208,9 +211,33 @@ public class HudFragment extends Fragment{
 
             wavesMain.row();
 
+            wavesMain.table(Tex.button, t -> t.add(new Bar(
+              () -> Core.bundle.format("stat.health") + String.format(": %.1f / %.1f", 
+              player.unit().health() * state.rules.unitHealthMultiplier, 
+              player.unit().maxHealth() * state.rules.unitHealthMultiplier), 
+              () -> Pal.health, 
+              () -> player.unit().health() / player.unit().maxHealth()).blink(Color.white))
+              .grow()).fillX().height(20f).color(Color.black).width(dsize * 5 + 4f).name("healthBar");
+  
+            wavesMain.row();
+            wavesMain.table(Tex.button, t -> t.add(new Bar(
+            () -> Core.bundle.format("stat.shieldhealth") + String.format(": %.1f (%d)", 
+            player.unit().shield(), 
+            (int)player.unit().armor()), 
+            () -> Pal.accent, 
+            () -> player.unit().shield / player.unit().maxHealth()).blink(Color.white))
+            .grow()).fillX().height(20f).color(Color.black).width(dsize * 5 + 4f).name("shieldhealthBar");
+
+            wavesMain.row();
+            wavesMain.add(new TileInfoHud()).visible(() -> mobile && net.active() && !(state.rules.waves && state.boss() != null)).left();
+            
+            wavesMain.row();
+
             wavesMain.table(Tex.button, t -> t.margin(10f).add(new Bar("boss.health", Pal.health, () -> state.boss() == null ? 0f : state.boss().healthf()).blink(Color.white))
             .grow()).fillX().visible(() -> state.rules.waves && state.boss() != null).height(60f).name("boss");
 
+            wavesMain.row();
+            wavesMain.add(new TileInfoHud()).visible(() -> mobile && net.active() && (state.rules.waves && state.boss() != null)).left();
             wavesMain.row();
 
             editorMain.name = "editor";
@@ -259,6 +286,8 @@ public class HudFragment extends Fragment{
                 }
 
                 info.label(() -> ping.get(netClient.getPing())).visible(net::client).left().style(Styles.outlineLabel).name("ping");
+                info.row();
+                info.add(new TileInfoHud()).visible(!mobile).left();
 
             }).top().left();
         });
