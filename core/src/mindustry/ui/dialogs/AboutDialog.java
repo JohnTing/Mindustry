@@ -76,6 +76,8 @@ public class AboutDialog extends BaseDialog{
             in.add(table).size(w, h).padTop(5).row();
         }
 
+        in.add("Additional features provided by JohnTing.");
+
         shown(() -> Time.run(1f, () -> Core.scene.setScrollFocus(pane)));
 
         cont.add(pane).growX();
