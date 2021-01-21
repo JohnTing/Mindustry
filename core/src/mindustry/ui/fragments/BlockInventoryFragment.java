@@ -198,8 +198,10 @@ public class BlockInventoryFragment extends Fragment{
         f = (int)f;
         if(f >= 1000000){
             return (int)(f / 1000000f) + "[gray]" + Core.bundle.getOrNull("unit.millions") + "[]";
+        }else if(f >= 10000){
+          return (int)(f / 1000) + Core.bundle.getOrNull("unit.thousands");
         }else if(f >= 1000){
-            return (int)(f / 1000) + Core.bundle.getOrNull("unit.thousands");
+            return String.format("%.1f%s", (int)(f/100)*0.1f, Core.bundle.getOrNull("unit.thousands"));
         }else{
             return (int)f + "";
         }

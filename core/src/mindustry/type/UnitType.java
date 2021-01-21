@@ -156,15 +156,55 @@ public class UnitType extends UnlockableContent{
         table.table(t -> {
             t.left();
             t.add(new Image(icon(Cicon.medium))).size(8 * 4).scaling(Scaling.fit);
-            t.labelWrap(localizedName).left().width(190f).padLeft(5);
+            // t.labelWrap(localizedName).left().width(190f).padLeft(5);
+            if (unit.type == UnitTypes.alpha || unit.type == UnitTypes.beta || unit.type == UnitTypes.gamma) {
+              t.labelWrap(String.format("%s (%d/%d)", 
+              localizedName, 
+              unit.team.data().countType(unit.type), Groups.player.size())).left().width(190f).padLeft(5);
+            } else {
+              t.labelWrap(String.format("%s (%d/%d)", 
+              localizedName, 
+              unit.team.data().countType(unit.type), Units.getCap(unit.team))).left().width(190f).padLeft(5);
+            }
+
+            if (unit.stack() != null && unit.stack().amount > 0) {
+                // table.row();
+                t.labelWrap(() -> unit.stack().item.emoji() + " " + (long)unit.stack().amount + "").left().padLeft(0);
+            }
+
         }).growX().left();
         table.row();
 
         table.table(bars -> {
             bars.defaults().growX().height(20f).pad(4);
 
-            bars.add(new Bar("stat.health", Pal.health, unit::healthf).blink(Color.white));
+            // bars.add(new Bar("stat.health", Pal.health, unit::healthf).blink(Color.white));
+            bars.add(new Bar(() ->
+            (Core.bundle.format("stat.health") + " " + String.format("%.1f/%.1f", 
+            unit.health() * state.rules.unitHealthMultiplier, 
+            unit.maxHealth() * state.rules.unitHealthMultiplier)),
+            () -> Pal.health,
+            unit::healthf).blink(Color.white));
+            
             bars.row();
+            if (unit.armor() > 0.1f) {
+              bars.add(new Bar(() ->
+              (Core.bundle.format("stat.shieldhealth") + " " + String.format("%.1f (%d)", 
+              unit.shield(), 
+              (int)unit.armor())),
+              () -> Pal.accent,
+              () -> (unit.shield() / unit.maxHealth())).blink(Color.white));
+              bars.row();
+
+            } else {
+
+              bars.add(new Bar(() ->
+              (Core.bundle.format("stat.shieldhealth") + " " + String.format("%.1f", 
+              unit.shield() )),
+              () -> Pal.accent,
+              () -> (unit.shield() / unit.maxHealth())).blink(Color.white));
+              bars.row();
+            }
 
             if(state.rules.unitAmmo){
                 bars.add(new Bar(ammoType.icon + " " + Core.bundle.get("stat.ammo"), ammoType.barColor, () -> unit.ammo / ammoCapacity));
@@ -175,6 +215,14 @@ public class UnitType extends UnlockableContent{
         if(unit.controller() instanceof LogicAI){
             table.row();
             table.add(Blocks.microProcessor.emoji() + " " + Core.bundle.get("units.processorcontrol")).growX().left();
+
+            LogicAI logicAI = (LogicAI)unit.controller();
+            if(logicAI.controller instanceof Building) {
+                Building build = (Building)(logicAI.controller);
+                table.row();
+                table.add(Blocks.microProcessor.emoji() + " " + String.format("[lightgray]%d, %d[]", 
+                    (int)(build.x/8), (int)(build.y/8))).growX().left();
+            }
             table.row();
             table.label(() -> Iconc.settings + " " + (long)unit.flag + "").color(Color.lightGray).growX().wrap().left();
         }
@@ -206,6 +254,7 @@ public class UnitType extends UnlockableContent{
         Unit inst = constructor.get();
 
         stats.add(Stat.health, health);
+        stats.add(Stat.armor, armor);
         stats.add(Stat.speed, speed);
         stats.add(Stat.itemCapacity, itemCapacity);
         stats.add(Stat.range, (int)(maxRange / tilesize), StatUnit.blocks);

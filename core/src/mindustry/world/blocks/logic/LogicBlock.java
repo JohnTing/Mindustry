@@ -477,8 +477,13 @@ public class LogicBlock extends Block{
         @Override
         public void buildConfiguration(Table table){
             table.button(Icon.pencil, Styles.clearTransi, () -> {
+                String originCode = code;
                 Vars.ui.logic.show(code, code -> {
-                    configure(compress(code, relativeConnections()));
+                    // configure(compress(code, relativeConnections()));
+                    if (originCode == null || !originCode.equals(code)) {
+                      configure(compress(code, relativeConnections()));
+                    }
+                    
                 });
             }).size(40);
         }
