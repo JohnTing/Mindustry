@@ -105,17 +105,42 @@ public class PowerNode extends PowerBlock{
     @Override
     public void setBars(){
         super.setBars();
-        bars.add("power", entity -> new Bar(() ->
-        Core.bundle.format("bar.powerbalance",
-            ((entity.power.graph.getPowerBalance() >= 0 ? "+" : "") + UI.formatAmount((int)(entity.power.graph.getPowerBalance() * 60)))),
-            () -> Pal.powerBar,
-            () -> Mathf.clamp(entity.power.graph.getLastPowerProduced() / entity.power.graph.getLastPowerNeeded())));
+        
+        // powerdetails
+        if(!Core.settings.getBool("powerdetails", false)) {
+          bars.add("power", entity -> new Bar(() ->
+          Core.bundle.format("bar.powerbalance",
+              ((entity.power.graph.getPowerBalance() >= 1 ? "+" : "") + UI.formatAmount((int)(entity.power.graph.getPowerBalance() * 60)))),
+              () -> Pal.powerBar,
+              () -> Mathf.clamp(entity.power.graph.getLastPowerProduced() / entity.power.graph.getLastPowerNeeded())));
+  
+          bars.add("batteries", entity -> new Bar(() ->
+          Core.bundle.format("bar.powerstored",
+              (UI.formatAmount((int)entity.power.graph.getLastPowerStored())), UI.formatAmount((int)entity.power.graph.getLastCapacity())),
+              () -> Pal.powerBar,
+              () -> Mathf.clamp(entity.power.graph.getLastPowerStored() / entity.power.graph.getLastCapacity())));
+        } else {
 
-        bars.add("batteries", entity -> new Bar(() ->
-        Core.bundle.format("bar.powerstored",
-            (UI.formatAmount((int)entity.power.graph.getLastPowerStored())), UI.formatAmount((int)entity.power.graph.getLastCapacity())),
-            () -> Pal.powerBar,
-            () -> Mathf.clamp(entity.power.graph.getLastPowerStored() / entity.power.graph.getLastCapacity())));
+          // (entity.power.graph.getLastScaledPowerIn() - entity.power.graph.getLastScaledPowerOut()) * 60
+          bars.add("power", entity -> new Bar(() ->
+          Core.bundle.format("bar.powerbalance",
+              (((entity.power.graph.getSmoothScaledPowerIn() - entity.power.graph.getSmoothScaledPowerOut()) * 60) >= 1 ? "+" : "")
+               + UI.formatBar(entity.power.graph.getSmoothScaledPowerIn() * 60 - entity.power.graph.getSmoothScaledPowerOut() * 60)) 
+               
+               + String.format("(%s%s)", 
+               
+               ((entity.power.graph.getSmoothEnergyDelta() * 60) >= 1 ? "+" : ""), UI.formatAmount2((int)(entity.power.graph.getSmoothEnergyDelta()* 60))
+               )
+               , 
+              () -> Pal.powerBar,
+              () -> Mathf.clamp(entity.power.graph.getLastPowerProduced() / entity.power.graph.getLastPowerNeeded())));
+  
+          bars.add("batteries", entity -> new Bar(() ->
+          Core.bundle.format("bar.powerstored",
+              (UI.formatBar(entity.power.graph.getLastPowerStored())), UI.formatBar(entity.power.graph.getLastCapacity())),
+              () -> Pal.powerBar,
+              () -> Mathf.clamp(entity.power.graph.getLastPowerStored() / entity.power.graph.getLastCapacity())));
+        }
 
         bars.add("connections", entity -> new Bar(() ->
         Core.bundle.format("bar.powerlines", entity.power.links.size, maxNodes),
