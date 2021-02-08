@@ -36,6 +36,7 @@ import mindustry.world.blocks.distribution.*;
 import mindustry.world.blocks.payloads.*;
 import mindustry.world.blocks.power.*;
 import mindustry.world.blocks.storage.CoreBlock.*;
+import mindustry.world.blocks.units.UnitFactory;
 import mindustry.world.meta.*;
 
 import java.util.*;
@@ -310,6 +311,9 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
         }
 
         if(player != null) build.lastAccessed = player.name;
+        if(player != null){
+            mindustry.Vars.tileInfoManagement.addInfo(player, mindustry.game.griefprevention.TileInfo.ActionType.rotate, build.tile(), build.block);
+        }
         build.rotation = Mathf.mod(build.rotation + Mathf.sign(direction), 4);
         build.updateProximity();
         build.noSleep();
@@ -321,6 +325,14 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
         if(build == null) return;
         if(net.server() && (!Units.canInteract(player, build) ||
             !netServer.admins.allowAction(player, ActionType.configure, build.tile, action -> action.config = value))) throw new ValidateException(player, "Player cannot configure a tile.");
+
+        if (value instanceof Integer integer) {
+            Building other = world.build(integer);
+            boolean contains = build.power != null && build.power.links != null && build.power.links.contains(integer);
+            if (contains) {
+                mindustry.Vars.tileInfoManagement.checkPowerSplit(build, player);
+            }
+        }
         build.configured(player == null || player.dead() ? null : player.unit(), value);
         Core.app.post(() -> Events.fire(new ConfigEvent(build, player, value)));
     }
@@ -913,7 +925,13 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
         //consume tap event if necessary
         if(build.interactable(player.team()) && build.block.consumesTap){
             consumed = true;
-        }else if(build.interactable(player.team()) && build.block.synthetic() && !consumed){
+        // }else if(build.interactable(player.team()) && build.block.synthetic() && !consumed){
+        }else if(build.block.synthetic() && (
+            !consumed || 
+            build.block() instanceof UnitFactory || 
+            build.block() instanceof MassDriver || 
+            build.block() instanceof ItemBridge
+            )){
             if(build.block.hasItems && build.items.total() > 0){
                 frag.inv.showFor(build);
                 consumed = true;

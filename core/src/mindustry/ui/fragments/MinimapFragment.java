@@ -100,6 +100,10 @@ public class MinimapFragment extends Fragment{
 
             t.add("@minimap").style(Styles.outlineLabel).pad(10f);
             t.row();
+            t.add(String.format("unitDamageMultiplier=%.1f\nblockDamageMultiplier=%.1f\n", 
+            state.rules.unitDamageMultiplier, state.rules.blockDamageMultiplier)            
+            ).style(Styles.outlineLabel).pad(10f).right();
+            t.row();
             t.add().growY();
             t.row();
             t.button("@back", Icon.leftOpen, () -> shown = false).size(220f, 60f).pad(10f);

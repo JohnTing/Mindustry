@@ -1,10 +1,15 @@
 package mindustry.world.blocks.power;
 
+import java.util.Iterator;
+import java.util.WeakHashMap;
+import java.util.Map.Entry;
+
 import arc.*;
 import arc.math.*;
 import arc.struct.*;
 import arc.util.*;
 import mindustry.gen.*;
+import mindustry.world.blocks.power.PowerDiode.PowerDiodeBuild;
 import mindustry.world.consumers.*;
 
 public class PowerGraph{
@@ -24,6 +29,13 @@ public class PowerGraph{
     //diodes workaround for correct energy production info
     private float energyDelta = 0f;
 
+    private WindowedMean energyDeltaBalance = new WindowedMean(60);
+    private WindowedMean powerInBalance = new WindowedMean(60);
+    private WindowedMean powerOutBalance = new WindowedMean(60);
+
+    private float tEnergyDelta = 0f;
+    private float tPowerIn = 0f;
+    private float tPowerOut = 0f;
     private long lastFrameUpdated = -1;
     private final int graphID;
     private static int lastGraphID;
@@ -34,6 +46,71 @@ public class PowerGraph{
 
     public int getID(){
         return graphID;
+    }
+
+    WeakHashMap<PowerDiodeBuild, Integer> transferDiode = new WeakHashMap<PowerDiodeBuild, Integer>();
+    public void registerDiode(PowerDiodeBuild diode, int direction) {
+      transferDiode.put(diode, direction);
+    }
+    
+    public float getSmoothEnergyDelta(){
+        float total = 0;
+        closedSet.clear();
+        Iterator<Entry<PowerDiodeBuild, Integer>> it = transferDiode.entrySet().iterator();
+        
+        while(it.hasNext()) {
+            Entry<PowerDiodeBuild, Integer> a = it.next();
+            Building back = a.getKey().back();
+            Building front = a.getKey().front();
+            if(front == null || back == null || !back.block.hasPower || !front.block.hasPower || back.team != front.team) {
+              it.remove();
+              continue;
+            };
+            PowerGraph pg;
+            if (a.getValue() >= 0) {
+                pg = back.power.graph;
+            } else {
+                pg = front.power.graph;
+            }
+            if(pg != this && !closedSet.contains(pg.getID())) {
+                //lastScaledPowerIn
+                total += pg.lastScaledPowerIn - pg.lastScaledPowerOut;
+                closedSet.add(pg.getID());
+            }
+        }
+        energyDeltaBalance.add(total);
+        /*
+        if (tEnergyDelta + 30 * (0.5f - Math.min(Math.abs(smoothEnergyDelta - energyDeltaBalance.rawMean()), 0.5f)) < Time.time) {
+            smoothEnergyDelta = energyDeltaBalance.rawMean();
+            tEnergyDelta = Time.time;
+        }
+        return smoothEnergyDelta;*/
+        //return energyDeltaBalance.rawMean();
+        return energyDeltaBalance.hasEnoughData() ? energyDeltaBalance.mean() : total;
+    }
+    public float getSmoothScaledPowerIn(){
+        /*
+        if (tPowerIn + 30 * (0.5f - Math.min(Math.abs(smoothPowerIn - powerInBalance.rawMean()), 0.5f)) < Time.time) {
+            smoothPowerIn = powerInBalance.rawMean();
+            tPowerIn = Time.time;
+        }
+        return smoothPowerIn;*/
+        powerInBalance.add(lastScaledPowerIn);
+        
+        // energyDeltaBalance.add(energyDelta / Time.delta);
+
+        
+        return powerInBalance.hasEnoughData() ? powerInBalance.mean() : lastScaledPowerIn;
+    }
+    public float getSmoothScaledPowerOut(){
+        /*
+        if (tPowerOut + 30 * (0.5f - Math.min(Math.abs(smoothPowerOut - powerOutBalance.rawMean()), 0.5f)) < Time.time) {
+            smoothPowerOut = powerOutBalance.rawMean();
+            tPowerOut = Time.time;
+        }
+        return smoothPowerOut;*/
+        powerOutBalance.add(lastScaledPowerOut);
+        return powerOutBalance.hasEnoughData() ? powerOutBalance.mean() : lastScaledPowerOut;
     }
 
     public float getLastScaledPowerIn(){

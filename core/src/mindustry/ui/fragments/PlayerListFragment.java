@@ -8,8 +8,11 @@ import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
+import mindustry.Vars;
 import mindustry.gen.*;
 import mindustry.graphics.*;
+import mindustry.input.DesktopInput;
+import mindustry.input.MobileInput;
 import mindustry.net.*;
 import mindustry.net.Packets.*;
 import mindustry.ui.*;
@@ -149,15 +152,30 @@ public class PlayerListFragment extends Fragment{
                     t.button(Icon.zoom, Styles.clearPartiali, () -> Call.adminRequest(user, AdminAction.trace));
 
                 }).padRight(12).size(bs + 10f, bs);
-            }else if(!user.isLocal() && !user.admin && net.client() && Groups.player.size() >= 3 && player.team() == user.team()){ //votekick
+            }else if(!user.isLocal() && net.client() && Groups.player.size() >= 3 && player.team() == user.team()){ //votekick
                 button.add().growY();
 
-                button.button(Icon.hammer, Styles.clearPartiali,
+                button.button(Icon.zoom, Styles.clearPartiali, 
                 () -> {
-                    ui.showConfirm("@confirm", Core.bundle.format("confirmvotekick",  user.name()), () -> {
-                        Call.sendChatMessage("/votekick " + user.name());
-                    });
-                }).size(h);
+                    if (Vars.control.input instanceof DesktopInput input) {
+                        if (input.freecam == 0) {
+                            input.freecam = 1;
+                        }
+                        input.cameraTarget.set(user.x(), user.y());
+                    }
+                    else if (Vars.control.input instanceof MobileInput input) {
+                        Core.camera.position.set(user.x(), user.y());
+                    }
+                    this.toggle();
+                }).size(h*0.7f).padRight(12);
+                if(!user.admin) {               
+                    button.button(Icon.hammer, Styles.clearPartiali,
+                    () -> {
+                        ui.showConfirm("@confirm", Core.bundle.format("confirmvotekick",  user.name()), () -> {
+                            Call.sendChatMessage("/votekick " + user.name());
+                        });
+                    }).size(h*0.7f);
+                }
             }
 
             content.add(button).padBottom(-6).width(350f).maxHeight(h + 14);

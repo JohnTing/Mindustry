@@ -71,6 +71,9 @@ public enum Binding implements KeyBind{
     chat_scroll(new Axis(KeyCode.scroll)),
     chat_mode(KeyCode.tab),
     console(KeyCode.f8),
+    freecam(KeyCode.b),
+    slowcam(KeyCode.controlLeft),
+    toggle_unit_draw(KeyCode.space),
     ;
 
     private final KeybindValue defaultValue;
