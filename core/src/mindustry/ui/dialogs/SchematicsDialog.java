@@ -268,6 +268,11 @@ public class SchematicsDialog extends BaseDialog{
                     dialog.hide();
                     platform.export(s.name(), schematicExtension, file -> Schematics.write(s, file));
                 }).marginLeft(12f);
+                t.row();
+                t.button("schematic.logic", Icon.export, style, () -> {
+                    dialog.hide();
+                    Core.app.setClipboardText(schematics.writeLogic(s));
+              }).marginLeft(12f);
             });
         });
 

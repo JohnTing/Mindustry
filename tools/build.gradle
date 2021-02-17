@@ -10,6 +10,8 @@ import java.awt.Graphics2D
 import java.awt.image.*
 import java.util.concurrent.*
 
+sourceCompatibility = 1.15
+
 def genFolder = "../core/assets-raw/sprites_out/generated/"
 def doAntialias = !project.hasProperty("disableAntialias")
 def colorMap = new IntMap<List<Color>>(), colorIndexMap = new IntIntMap()

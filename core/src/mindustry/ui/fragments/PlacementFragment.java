@@ -23,6 +23,7 @@ import mindustry.ui.*;
 import mindustry.world.*;
 import mindustry.world.blocks.*;
 import mindustry.world.blocks.ConstructBlock.*;
+import java.time.Instant;
 
 import static mindustry.Vars.*;
 
@@ -30,6 +31,7 @@ public class PlacementFragment extends Fragment{
     final int rowWidth = 4;
 
     public Category currentCategory = Category.distribution;
+    private Instant lastUnitTime = Instant.now();
 
     Seq<Block> returnArray = new Seq<>(), returnArray2 = new Seq<>();
     Seq<Category> returnCatArray = new Seq<>();
@@ -451,6 +453,17 @@ public class PlacementFragment extends Fragment{
 
         //check for a unit
         Unit unit = Units.closestOverlap(player.team(), Core.input.mouseWorldX(), Core.input.mouseWorldY(), 5f, u -> !u.isLocal());
+        
+        //check for a enemy unit
+        if ( unit == null) {
+          unit = Units.closestEnemyOverlap(player.team(), Core.input.mouseWorldX(), Core.input.mouseWorldY(), 5f, u -> !u.isLocal());
+        }
+
+        // RRecord the last time the player hovered over the unit
+        if(unit != null) {
+          lastUnitTime = Instant.now();
+        }
+        
         //if cursor has a unit, display it
         if(unit != null) return unit;
 
@@ -462,7 +475,14 @@ public class PlacementFragment extends Fragment{
                 hoverTile.build.updateFlow = true;
                 return hoverTile.build;
             }
-
+        }
+        // Continuous Display Unit
+        if (hover instanceof Unit oldUnit) {
+            if (lastUnitTime.plusMillis(1000).isAfter(Instant.now())) {
+                return hover;
+            }
+        }
+        if(hoverTile != null){
             //if the tile has a drop, display the drop
             if(hoverTile.drop() != null){
                 return hoverTile;

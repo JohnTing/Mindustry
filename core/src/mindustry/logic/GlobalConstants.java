@@ -61,6 +61,7 @@ public class GlobalConstants{
 
     /** Adds a constant value by name. */
     public Var put(String name, Object value){
+
         Var var = new Var(name);
         var.constant = true;
         if(value instanceof Number num){
