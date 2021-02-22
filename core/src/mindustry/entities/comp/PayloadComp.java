@@ -140,6 +140,10 @@ abstract class PayloadComp implements Posc, Rotc, Hitboxc, Unitc{
                 payload.build.lastAccessed = getControllerName();
             }
 
+            if(this.isPlayer()){
+              mindustry.Vars.tileInfoManagement.addInfo(this.getPlayer(), mindustry.game.griefprevention.TileInfo.ActionType.dropBlock, tile.tile(), tile.block);
+            }
+            
             Fx.unitDrop.at(tile);
             Fx.placeBlock.at(on.drawx(), on.drawy(), on.block().size);
             return true;

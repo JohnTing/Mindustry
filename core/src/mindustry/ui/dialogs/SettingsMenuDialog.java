@@ -441,6 +441,13 @@ public class SettingsMenuDialog extends SettingsDialog{
         }
 
         graphics.checkPref("flow", true);
+
+        graphics.checkPref("buildhideunit", true);
+        graphics.checkPref("powerdetails", false);
+        /** minZoom = zooming out, maxZoom = zooming in */
+        graphics.sliderPref("minzoom", 100, 25, 150, 25, s -> {
+          return s + "%";
+        });
     }
 
     public void exportData(Fi file) throws IOException{

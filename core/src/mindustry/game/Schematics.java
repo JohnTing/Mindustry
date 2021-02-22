@@ -410,6 +410,50 @@ public class Schematics implements Loadable{
         }
     }
 
+    /** Converts a schematic to base64. Note that the result of this will always start with 'bXNjaAB'.*/
+    public String writeLogic(Schematic schematic){
+      
+      // write 0 cell1 0
+      //double 15~16
+      // xxx yyy
+      int index = 0;
+      StringBuilder sb = new StringBuilder();
+      sb.append("getlink cell 0\n");
+      for(Stile tile : schematic.tiles) {
+        sb.append(String.format("write %04d%02d%04d%04d cell ", tile.block.id, tile.rotation, tile.x, tile.y));
+        sb.append(index);
+        sb.append("\n");
+        index += 1;
+        /*
+        sb.append("write ");
+        sb.append(tile.x);
+        sb.append(" mycell ");
+        sb.append(index);
+        sb.append("\n");
+
+        sb.append("write ");
+        sb.append(tile.y);
+        sb.append(" mycell ");
+        sb.append(index);
+        sb.append("\n");
+
+        sb.append("write ");
+        sb.append(tile.rotation);
+        sb.append(" mycell ");
+        sb.append(index);
+        sb.append("\n");
+
+        sb.append("write ");
+        sb.append(tile.block.id);
+        sb.append(" mycell ");
+        sb.append(index);
+        sb.append("\n");*/
+
+      }
+      return sb.toString();
+
+  }
+
     /** Places the last launch loadout at the coordinates and fills it with the launch resources. */
     public static void placeLaunchLoadout(int x, int y){
         placeLoadout(universe.getLastLoadout(), x, y);

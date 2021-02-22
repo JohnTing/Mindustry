@@ -71,6 +71,29 @@ public class SchematicsDialog extends BaseDialog{
                     }
                 }
             });
+            
+            cont.row();
+            {
+                
+                cont.table(ta-> {
+                    Boolean first = false;
+                    
+                    for(Schematic s : schematics.all()) {
+                        int i = s.name().indexOf("[tab]");
+                        if(i == 0) {
+
+                            if(!first) {
+                                ta.button("all", () -> setSearch("", rebuildPane[0]));
+                                first = true;
+                            }
+
+                            String name = s.name().substring(5);
+                            ta.button(name, () -> setSearch(name, rebuildPane[0])).marginLeft(12f).growX().minWidth(15 + name.length()*14);
+                        }
+                    }
+                });
+            }
+            cont.row();
 
             rebuildPane[0] = () -> {
                 int cols = Math.max((int)(Core.graphics.getWidth() / Scl.scl(230)), 1);
@@ -268,6 +291,11 @@ public class SchematicsDialog extends BaseDialog{
                     dialog.hide();
                     platform.export(s.name(), schematicExtension, file -> Schematics.write(s, file));
                 }).marginLeft(12f);
+                t.row();
+                t.button("schematic.logic", Icon.export, style, () -> {
+                    dialog.hide();
+                    Core.app.setClipboardText(schematics.writeLogic(s));
+              }).marginLeft(12f);
             });
         });
 
@@ -290,6 +318,13 @@ public class SchematicsDialog extends BaseDialog{
         }
 
         return this;
+    }
+
+    public void setSearch(String text, Runnable run) {
+
+        searchField.setText(text);
+        search = text;
+        run.run();
     }
 
     public static class SchematicImage extends Image{

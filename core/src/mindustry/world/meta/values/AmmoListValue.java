@@ -101,6 +101,10 @@ public class AmmoListValue<T extends UnlockableContent> implements StatValue{
                 if(type.fragBullet != null){
                     sep(bt, "@bullet.frag");
                 }
+
+                if(type.range() > 0f){
+                    sep(bt, "[lightgray]" + Core.bundle.format("stat.shootrange") + "[lightgray]: [white]" + (int)(type.range()/tilesize) + " " + Core.bundle.format("unit.blocks"));
+                }
             }).padTop(unit ? 0 : -9).left().get().background(unit ? null : Tex.underline);
 
             table.row();
