@@ -318,7 +318,7 @@ public class MobileInput extends InputHandler implements GestureListener{
                 drawBreakSelection(lineStartX, lineStartY, tileX, tileY);
             }
         }
-
+        drawNearbyTurret();
         Draw.reset();
     }
 
