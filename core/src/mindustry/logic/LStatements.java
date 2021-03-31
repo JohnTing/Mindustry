@@ -309,7 +309,7 @@ public class LStatements{
 
     @RegisterStatement("getlink")
     public static class GetLinkStatement extends LStatement{
-        public String output = "result", address = "0";
+        public String output = "block1", address = "0";
 
         @Override
         public void build(Table table){
