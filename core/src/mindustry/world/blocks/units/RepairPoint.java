@@ -12,6 +12,7 @@ import mindustry.entities.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.logic.*;
+import mindustry.type.UnitType;
 import mindustry.world.*;
 import mindustry.world.meta.*;
 
@@ -72,6 +73,9 @@ public class RepairPoint extends Block{
 
         @Override
         public void draw(){
+
+            if(UnitType.isHiding()) return;
+
             Draw.rect(baseRegion, x, y);
 
             Draw.z(Layer.turret);

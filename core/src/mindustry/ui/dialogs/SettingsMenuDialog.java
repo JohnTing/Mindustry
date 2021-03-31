@@ -39,6 +39,8 @@ public class SettingsMenuDialog extends SettingsDialog{
     private Table prefs;
     private Table menu;
     private BaseDialog dataDialog;
+    private BaseDialog featureDialog;
+
     private boolean wasPaused;
 
     public SettingsMenuDialog(){
@@ -222,6 +224,57 @@ public class SettingsMenuDialog extends SettingsDialog{
             }).marginLeft(4);
         });
 
+
+        featureDialog = new BaseDialog("@settings.feature");
+        featureDialog.addCloseButton();
+
+        featureDialog.cont.table(t -> {
+            t.defaults().width(480f).left();
+
+            t.labelWrap("UI").color(Color.gray).colspan(4).pad(10.0F).padBottom(4.0F).row();
+            t.labelWrap("I'm too lazy to describe it.").color(Color.yellow).row();
+
+            t.image().color(Color.gray).fillX().height(3.0F).pad(6.0F).colspan(4).padTop(5.0F).padBottom(5.0F).row();
+            t.labelWrap("General").color(Color.gray).colspan(4).pad(10.0F).padBottom(4.0F).row();
+            
+            t.labelWrap("Zoom").color(Color.yellow).row();
+            t.labelWrap("   Settings -> Graphics -> Zoom").row();
+            t.labelWrap("   Customized zoom in scaling (Official default 150%)").row();
+
+            t.labelWrap("Hide units while building").color(Color.yellow).row();
+            t.labelWrap("   Settings -> Graphics -> Hide units while building").row();
+
+            t.labelWrap("Show diode power").color(Color.yellow).row();
+            t.labelWrap("   Settings -> Graphics -> Show diode power").row();
+            t.labelWrap("   Show the real local power and the power behind the diode").row();
+
+            t.labelWrap("Schematic tab").color(Color.yellow).row();
+            t.labelWrap("   1.Create a Schematic named [yellow][tab][].").row();
+            t.labelWrap("   2.Write the tab name separated by \" , \" in the description.(Example: silicon, graphite, plast)").row();
+            t.labelWrap("   3.Restart Schematic Dialog").row();
+            
+            //Hide units while building Show diode power (restart may be required)
+            t.image().color(Color.gray).fillX().height(3.0F).pad(6.0F).colspan(4).padTop(5.0F).padBottom(5.0F).row();
+            t.labelWrap("Desktop only").color(Color.gray).colspan(4).pad(10.0F).padBottom(4.0F).row();
+            t.labelWrap("Freecam").color(Color.yellow).row();
+            t.labelWrap("   Settings -> Control -> Freecam (default: V)").row();
+            t.labelWrap("   Mode Red : Move the camera freely and stop the unit.").row();
+            t.labelWrap("   Mode Yellow : The unit will follow the camera.").row();
+            t.labelWrap("   Use Boost/Slowcam key to Change free camera speed.").row();
+
+            t.labelWrap("Hide Unit").color(Color.yellow).row();
+            t.labelWrap("   Settings -> Control -> Hide Units (default: Space)").row();
+            t.labelWrap("   Hide the unit display").row();
+
+            t.labelWrap("Rebuild Brush").color(Color.yellow).row();
+            t.labelWrap("   Settings -> Control -> Rebuild Brush (default: R)").row();
+            t.labelWrap("   Pause building (default: E), and choose destroyed area to rebuild.").row();
+
+            t.labelWrap("These features were produced by JohnTing").color(Color.gray).colspan(4).pad(10.0F).padBottom(4.0F).row();
+        });
+        
+
+
         ScrollPane pane = new ScrollPane(prefs);
         pane.addCaptureListener(new InputListener(){
             @Override
@@ -286,6 +339,8 @@ public class SettingsMenuDialog extends SettingsDialog{
 
         menu.row();
         menu.button("@settings.data", style, () -> dataDialog.show());
+        menu.row();
+        menu.button("@settings.feature", style, () -> featureDialog.show());
     }
 
     void addSettings(){
@@ -447,6 +502,14 @@ public class SettingsMenuDialog extends SettingsDialog{
         }
 
         graphics.checkPref("flow", true);
+
+        graphics.checkPref("buildhideunit", false);
+        graphics.checkPref("powerdetails", false);
+        graphics.checkPref("stopunitbuildlogic", false);
+        /** minZoom = zooming out, maxZoom = zooming in */
+        graphics.sliderPref("minzoom", 100, 25, 150, 25, s -> {
+          return s + "%";
+        });
     }
 
     public void exportData(Fi file) throws IOException{

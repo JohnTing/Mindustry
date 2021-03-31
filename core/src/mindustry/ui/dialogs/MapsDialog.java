@@ -17,6 +17,8 @@ import static mindustry.Vars.*;
 
 public class MapsDialog extends BaseDialog{
     private BaseDialog dialog;
+    private String search = "";
+    private TextField searchField;
 
     public MapsDialog(){
         super("@maps");
@@ -36,6 +38,22 @@ public class MapsDialog extends BaseDialog{
 
     void setup(){
         buttons.clearChildren();
+
+        cont.clear();
+        cont.top();
+        Runnable[] rebuildPane = {null};
+
+        cont.table(s -> {
+            s.left();
+            s.image(Icon.zoom);
+            searchField = s.field(search, res -> {
+                search = res.toLowerCase();
+                rebuildPane[0].run();
+            }).growX().get();
+        }).fillX().padBottom(4);
+        cont.row();
+
+        //buttons.row();
 
         if(Core.graphics.isPortrait()){
             buttons.button("@back", Icon.left, this::hide).size(210f*2f, 64f).colspan(2);
@@ -109,19 +127,26 @@ public class MapsDialog extends BaseDialog{
         }).size(210f, 64f);
 
 
-        cont.clear();
+        //cont.clear();
 
         Table maps = new Table();
-        maps.marginRight(24);
-
         ScrollPane pane = new ScrollPane(maps);
-        pane.setFadeScrollBars(false);
-
+        
         int maxwidth = Math.max((int)(Core.graphics.getWidth() / Scl.scl(230)), 1);
         float mapsize = 200f;
 
+        rebuildPane[0] = () -> {
+        maps.clear();
+        maps.marginRight(24);
+
+        pane.setFadeScrollBars(false);
+
         int i = 0;
         for(Map map : Vars.maps.all()){
+
+            if(!search.isEmpty() && !map.name().toLowerCase().contains(search)) {
+                continue;
+            }
 
             if(i % maxwidth == 0){
                 maps.row();
@@ -144,10 +169,12 @@ public class MapsDialog extends BaseDialog{
         if(Vars.maps.all().size == 0){
             maps.add("@maps.none");
         }
-
+        };
         cont.add(buttons).growX();
         cont.row();
         cont.add(pane).uniformX();
+        
+        rebuildPane[0].run();
     }
 
     void showMapInfo(Map map){
@@ -213,4 +240,23 @@ public class MapsDialog extends BaseDialog{
 
         dialog.show();
     }
+
+    public void focusSearchField(){
+        if(searchField == null) return;
+
+        Core.scene.setKeyboardFocus(searchField);
+    }
+
+    @Override
+    public Dialog show(){
+        super.show();
+
+        if(Core.app.isDesktop()){
+            focusSearchField();
+        }
+
+        return this;
+    }
+
+
 }

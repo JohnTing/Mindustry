@@ -6,7 +6,7 @@ import mindustry.*;
 public enum BuildVisibility{
     hidden(() -> false),
     shown(() -> true),
-    debugOnly(() -> false),
+    debugOnly(() -> Vars.state == null || Vars.state.rules.infiniteResources),
     editorOnly(() -> false),
     sandboxOnly(() -> Vars.state == null || Vars.state.rules.infiniteResources),
     campaignOnly(() -> Vars.state == null || Vars.state.isCampaign()),

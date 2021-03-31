@@ -558,6 +558,35 @@ public class UI implements ApplicationListener, Loadable{
         }
     }
 
+    public static String formatBar(float numberf){
+        int number = (int)numberf;
+        if(Math.abs(number) >= 10_000_000){
+            return Strings.fixed(number / 1_000_000f, 1) + "[gray]" + Core.bundle.get("unit.millions") + "[]";
+        }else if(Math.abs(number) >= 1_000_000){
+            return Strings.fixed(number / 1000f, 0) + "[gray]" + Core.bundle.get("unit.thousands") + "[]";
+        }else if(Math.abs(number) >= 10_000){
+            return Strings.fixed(number / 1000f, 1) + "[gray]" + Core.bundle.get("unit.thousands") + "[]";
+        }else{
+            return number + "";
+        }
+    }
+    
+    public static String formatAmount2(int number){
+
+          if(Math.abs(number) >= 1_000_000_000){
+            return Strings.fixed(number / 1_000_000_000f, 1) + "[gray]" + Core.bundle.get("unit.billions") + "[]";
+        }else if(Math.abs(number) >= 1_000_000){
+            return Strings.fixed(number / 1_000_000f, 1) + "[gray]" + Core.bundle.get("unit.millions") + "[]";
+        }else if(Math.abs(number) >= 10_000){
+            return number / 1000 + "[gray]" + Core.bundle.get("unit.thousands") + "[]";
+        }else if(Math.abs(number) >= 1000){
+            return Strings.fixed(number / 1000f, 1) + "[gray]" + Core.bundle.get("unit.thousands") + "[]";
+        }else{
+            return number + "";
+        }
+    }
+    
+
     public static int roundAmount(int number){
         if(number >= 1_000_000_000){
             return Mathf.round(number, 100_000_000);

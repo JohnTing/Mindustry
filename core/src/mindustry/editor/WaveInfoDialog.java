@@ -165,6 +165,23 @@ public class WaveInfoDialog extends BaseDialog{
 
                         b.add().growX();
 
+                        b.button(Icon.copy, () -> {
+                            if(groups == null) groups = new Seq<>();
+                            SpawnGroup sg = new SpawnGroup(group.type);
+                            sg.begin = group.begin;
+                            sg.effect = group.effect;
+                            sg.end = group.end;
+                            sg.items = group.items;
+                            sg.max = group.max;
+                            sg.shieldScaling = group.shieldScaling;
+                            sg.shields = group.shields;
+                            sg.spacing = group.spacing;
+                            sg.unitAmount = group.unitAmount;
+                            sg.unitScaling = group.unitScaling;
+                            groups.insert(groups.indexOf(group)+1, sg);
+                            buildGroups();
+                        }).pad(-6).size(46f).padRight(0f);;
+
                         b.button(Icon.cancel, () -> {
                             groups.remove(group);
                             table.getCell(t).pad(0f);

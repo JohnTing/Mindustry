@@ -11,6 +11,7 @@ import arc.scene.ui.*;
 import arc.scene.ui.ImageButton.*;
 import arc.scene.ui.TextButton.*;
 import arc.scene.ui.layout.*;
+import arc.scene.utils.Elem;
 import arc.util.*;
 import mindustry.*;
 import mindustry.game.*;
@@ -21,6 +22,14 @@ import mindustry.type.*;
 import mindustry.ui.*;
 
 import static mindustry.Vars.*;
+
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SchematicsDialog extends BaseDialog{
     private SchematicInfoDialog info = new SchematicInfoDialog();
@@ -71,6 +80,50 @@ public class SchematicsDialog extends BaseDialog{
                     }
                 }
             });
+
+            cont.row();
+            {
+                LinkedList<TextButton> names = new LinkedList<TextButton>();
+
+                for(Schematic s : schematics.all()) {
+                    if(!s.name().equals("[tab]")) {
+                        continue;
+                    }
+                    for(String a : s.description().split(",")) {
+                        String name = a.trim();
+                        names.add(Elem.newButton(name, () -> setSearch(name, rebuildPane[0])));
+                        names.getLast().getLabel().setWrap(false);
+                    }
+                }
+                
+                Boolean[] first = {true};
+                float graphicsWidth = Core.graphics.getWidth();
+                while(!names.isEmpty()) {
+                    cont.table(ta-> {
+                        float linewidth = 0;
+                        if(first[0]) {
+                            first[0] = !first[0];
+                            Cell<TextButton> cell = ta.button("all", () -> setSearch("", rebuildPane[0]));
+                            cell.get().getLabel().setWrap(false);
+                            linewidth += cell.prefWidth();
+                        }
+                        
+                        float prefWidth = names.getFirst().getPrefWidth();
+                        while(!names.isEmpty() && linewidth + prefWidth < graphicsWidth) {
+
+                            ta.add(names.getFirst());
+                            linewidth += prefWidth;
+                            names.removeFirst();
+
+                            if(names.isEmpty()) {
+                                break;
+                            }
+                            prefWidth = names.getFirst().getPrefWidth();
+                        };
+                    });
+                    cont.row();
+                }
+            }
 
             rebuildPane[0] = () -> {
                 int cols = Math.max((int)(Core.graphics.getWidth() / Scl.scl(230)), 1);
@@ -268,6 +321,15 @@ public class SchematicsDialog extends BaseDialog{
                     dialog.hide();
                     platform.export(s.name(), schematicExtension, file -> Schematics.write(s, file));
                 }).marginLeft(12f);
+                // Unfinished features 
+                /*
+                t.row();
+                t.button("schematic.logic", Icon.export, style, () -> {
+                    dialog.hide();
+                    Core.app.setClipboardText(schematics.writeLogic(s));
+              }).marginLeft(12f);
+              */
+
             });
         });
 
@@ -290,6 +352,13 @@ public class SchematicsDialog extends BaseDialog{
         }
 
         return this;
+    }
+
+    public void setSearch(String text, Runnable run) {
+
+        searchField.setText(text);
+        search = text;
+        run.run();
     }
 
     public static class SchematicImage extends Image{
