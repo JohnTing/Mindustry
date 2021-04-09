@@ -10,6 +10,8 @@ import mindustry.*;
 import mindustry.ai.types.*;
 import mindustry.gen.*;
 import mindustry.input.*;
+import mindustry.type.UnitType;
+import mindustry.type.Weapon;
 import mindustry.ui.*;
 import mindustry.world.*;
 
@@ -120,6 +122,15 @@ public class OverlayRenderer{
                     Draw.color(Pal.accent, core.team.color, 0.5f + Mathf.absin(Time.time, 10f, 0.5f));
                     Lines.circle(core.x, core.y, state.rules.enemyCoreBuildRadius);
                 }
+
+                dst = core.dst(Core.input.mouseWorld());
+                if(dst < state.rules.enemyCoreBuildRadius * 2.2f){
+                    Draw.color(Color.darkGray);
+                    Lines.circle(core.x, core.y - 2, state.rules.enemyCoreBuildRadius);
+                    Draw.color(Pal.accent, core.team.color, 0.5f + Mathf.absin(Time.time, 10f, 0.5f));
+                    Lines.circle(core.x, core.y, state.rules.enemyCoreBuildRadius);
+                }
+
             });
         }
 
@@ -128,8 +139,11 @@ public class OverlayRenderer{
 
         if(state.hasSpawns()){
             for(Tile tile : spawner.getSpawns()){
-                if(tile.within(player.x, player.y, state.rules.dropZoneRadius + spawnerMargin)){
-                    Draw.alpha(Mathf.clamp(1f - (player.dst(tile) - state.rules.dropZoneRadius) / spawnerMargin));
+
+                // if(tile.within(player.x, player.y, state.rules.dropZoneRadius + spawnerMargin)){
+                    if(tile.within(Core.camera.position, state.rules.dropZoneRadius + spawnerMargin)){
+                        
+                    Draw.alpha(Mathf.clamp(1f - (Core.camera.position.dst(tile) - state.rules.dropZoneRadius) / spawnerMargin));
                     Lines.dashCircle(tile.worldx(), tile.worldy(), state.rules.dropZoneRadius);
                 }
             }
@@ -142,7 +156,8 @@ public class OverlayRenderer{
             Vec2 vec = Core.input.mouseWorld(input.getMouseX(), input.getMouseY());
             Building build = world.buildWorld(vec.x, vec.y);
 
-            if(build != null && build.team == player.team()){
+            // if(build != null && build.team == player.team()){
+            if(build != null){
                 build.drawSelect();
                 if(!build.enabled && build.block.drawDisabled){
                    build.drawDisabled();
@@ -157,12 +172,54 @@ public class OverlayRenderer{
             }
         }
 
+        // if player is tower, show attack range
+        if(player.unit() instanceof BlockUnitc blockUnitc) {
+          Building build = blockUnitc.tile();
+          if(build != null){
+            build.drawSelect();
+            if(!build.enabled && build.block.drawDisabled){
+               build.drawDisabled();
+            }
+          }
+        } else {
+          // if player is unit, show attack range
+          UnitType unittype = player.unit().type();
+          if(unittype != null && unittype.weapons != null && player.shooting()) {
+            Draw.color(player.team().color);
+            Draw.alpha(0.5f);
+                for(Weapon weapon : unittype.weapons) {
+                    Lines.dashCircle(player.x(), player.y(), weapon.bullet.range());
+                } 
+            }
+            Draw.reset();
+        }
+
+        // draw hover unit attack range
+        if(ui.hudfrag.blockfrag.hover() instanceof Unit unit) {
+          UnitType unittype = unit.type();
+          if(unittype != null && unittype.weapons != null) {
+            Draw.color(unit.team().color);
+            Draw.alpha(0.5f);
+                for(Weapon weapon : unittype.weapons) {
+                    Lines.dashCircle(unit.x(), unit.y(), weapon.bullet.range());
+                } 
+            }
+        }
+
         input.drawOverSelect();
 
         if(ui.hudfrag.blockfrag.hover() instanceof Unit unit && unit.controller() instanceof LogicAI ai && ai.controller instanceof Building build && build.isValid()){
             Drawf.square(build.x, build.y, build.block.size * tilesize/2f + 2f);
+            
             if(!unit.within(build, unit.hitSize * 2f)){
                 Drawf.arrow(unit.x, unit.y, build.x, build.y, unit.hitSize *2f, 4f);
+                
+                // draw line to logic block 
+                Lines.stroke(3f, Pal.gray);
+                Lines.dashLine(unit.x, unit.y, build.x, build.y, (int)(unit.dst(build) / 8));
+
+                Lines.stroke(1f, Pal.placing);
+                Lines.dashLine(unit.x, unit.y, build.x, build.y, (int)(unit.dst(build) / 8));
             }
         }
 

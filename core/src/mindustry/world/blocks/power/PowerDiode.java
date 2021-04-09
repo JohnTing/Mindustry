@@ -61,6 +61,9 @@ public class PowerDiode extends Block{
             PowerGraph frontGraph = front().power.graph;
             if(backGraph == frontGraph) return;
 
+            frontGraph.registerDiode(this, 1);
+            backGraph.registerDiode(this, -1);
+
             // 0f - 1f of battery capacity in use
             float backStored = backGraph.getBatteryStored() / backGraph.getTotalBatteryCapacity();
             float frontStored = frontGraph.getBatteryStored() / frontGraph.getTotalBatteryCapacity();

@@ -8,8 +8,11 @@ import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
+import mindustry.Vars;
 import mindustry.gen.*;
 import mindustry.graphics.*;
+import mindustry.input.DesktopInput;
+import mindustry.input.MobileInput;
 import mindustry.net.*;
 import mindustry.net.Packets.*;
 import mindustry.ui.*;
@@ -115,6 +118,20 @@ public class PlayerListFragment extends Fragment{
             button.add().grow();
 
             button.image(Icon.admin).visible(() -> user.admin && !(!user.isLocal() && net.server())).padRight(5).get().updateVisibility();
+
+            button.button(Icon.zoom, Styles.clearPartiali, 
+            () -> {
+                if (Vars.control.input instanceof DesktopInput input) {
+                    if (input.freecam == 0) {
+                        input.freecam = 1;
+                    }
+                    input.cameraTarget.set(user.x(), user.y());
+                }
+                else if (Vars.control.input instanceof MobileInput input) {
+                    Core.camera.position.set(user.x(), user.y());
+                }
+                this.toggle();
+            }).size(h*0.7f).padRight(12);
 
             if((net.server() || player.admin) && !user.isLocal() && (!user.admin || net.server())){
                 button.add().growY();
