@@ -23,6 +23,7 @@ import mindustry.entities.units.*;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
+import mindustry.input.Binding;
 import mindustry.ui.*;
 import mindustry.world.*;
 import mindustry.world.blocks.environment.*;
@@ -37,6 +38,7 @@ import static mindustry.Vars.*;
 public class UnitType extends UnlockableContent{
     public static final float shadowTX = -12, shadowTY = -13, outlineSpace = 0.01f;
     private static final Vec2 legOffset = new Vec2();
+    public static boolean hide = false;
 
     /** If true, the unit is always at elevation 1. */
     public boolean flying;
@@ -158,18 +160,60 @@ public class UnitType extends UnlockableContent{
         table.table(t -> {
             t.left();
             t.add(new Image(icon(Cicon.medium))).size(8 * 4).scaling(Scaling.fit);
-            t.labelWrap(localizedName).left().width(190f).padLeft(5);
+            // t.labelWrap(localizedName).left().width(190f).padLeft(5);
+            if (unit.type == UnitTypes.alpha || unit.type == UnitTypes.beta || unit.type == UnitTypes.gamma) {
+              t.labelWrap(String.format("%s (%d/%d)", 
+              localizedName, 
+              unit.team.data().countType(unit.type), Groups.player.size())).left().width(190f).padLeft(5);
+            } else {
+              t.labelWrap(String.format("%s (%d/%d)", 
+              localizedName, 
+              unit.team.data().countType(unit.type), Units.getCap(unit.team))).left().width(190f).padLeft(5);
+            }
+
+            if (unit.stack() != null && unit.stack().amount > 0) {
+                // table.row();
+                t.labelWrap(() -> unit.stack().item.emoji() + " " + (long)unit.stack().amount + "").left().padLeft(0);
+            }
+
         }).growX().left();
         table.row();
 
         table.table(bars -> {
             bars.defaults().growX().height(20f).pad(4);
 
-            bars.add(new Bar("stat.health", Pal.health, unit::healthf).blink(Color.white));
+            // bars.add(new Bar("stat.health", Pal.health, unit::healthf).blink(Color.white));
+            bars.add(new Bar(() ->
+            (Core.bundle.format("stat.health") + ": " + String.format("%s/%s", 
+            UI.formatBar(unit.health()), 
+            UI.formatBar(unit.maxHealth()))),
+            () -> Pal.health,
+            unit::healthf).blink(Color.white));
+            
             bars.row();
+            if (unit.armor() > 0.1f) {
+              bars.add(new Bar(() ->
+              (Core.bundle.format("stat.shieldhealth") + ": " + String.format("%s (%d)", 
+              UI.formatBar(unit.shield()), (int)unit.armor() )),
+              () -> Pal.accent,
+              () -> (unit.shield() / unit.maxHealth())).blink(Color.white));
+              bars.row();
+            } else {
+              bars.add(new Bar(() ->
+              (Core.bundle.format("stat.shieldhealth") + ": " + String.format("%s", 
+              UI.formatBar(unit.shield()) )),
+              () -> Pal.accent,
+              () -> (unit.shield() / unit.maxHealth())).blink(Color.white));
+              bars.row();
+            }
 
             if(state.rules.unitAmmo){
-                bars.add(new Bar(ammoType.icon + " " + Core.bundle.get("stat.ammo"), ammoType.barColor, () -> unit.ammo / ammoCapacity));
+                bars.add(new Bar(() -> 
+                ammoType.icon + Core.bundle.get("stat.ammo") + ": " + String.format("%d/%d", (int)(unit.ammo), (int)(ammoCapacity)), 
+                () -> ammoType.barColor, 
+                () -> unit.ammo / ammoCapacity));
+
+                // bars.add(new Bar(ammoType.icon + " " + Core.bundle.get("stat.ammo"), ammoType.barColor, () -> unit.ammo / ammoCapacity));
                 bars.row();
             }
 
@@ -194,10 +238,19 @@ public class UnitType extends UnlockableContent{
         if(unit.controller() instanceof LogicAI){
             table.row();
             table.add(Blocks.microProcessor.emoji() + " " + Core.bundle.get("units.processorcontrol")).growX().wrap().left();
-            table.row();
-            table.label(() -> Iconc.settings + " " + (long)unit.flag + "").color(Color.lightGray).growX().wrap().left();
+
+            LogicAI logicAI = (LogicAI)unit.controller();
+            
+            if(logicAI.controller instanceof Building) {
+                Building build = (Building)(logicAI.controller);
+                table.row();
+                table.add(Blocks.microProcessor.emoji() + " " + String.format("[lightgray]%d, %d[]", 
+                    (int)(build.x/8), (int)(build.y/8))).growX().left();
+            }
+            
         }
-        
+        table.row();
+        table.label(() -> Iconc.settings + " " + (long)unit.flag + "").color(Color.lightGray).growX().wrap().left();
         table.row();
     }
 
@@ -425,6 +478,25 @@ public class UnitType extends UnlockableContent{
         return ContentType.unit;
     }
 
+    public static boolean isHiding() {
+        return hide || (Core.settings.getBool("buildhideunit", false) && (control.input.isPlacing() || control.input.isBreaking()));
+    }
+
+    public static boolean isHiding(Unit unit) {       
+        // Vec2 v = Core.input.mouseWorld(control.input.getMouseX(), control.input.getMouseY());
+        // return hide || ((control.input.isPlacing() || control.input.isBreaking()) && 
+        // unit.dst(v) < 100f + unit.hitSize() * 5f );
+
+        return hide || (Core.settings.getBool("buildhideunit", false) && (control.input.isPlacing() || control.input.isBreaking()));
+    }
+
+    public static boolean isHiding(float x, float y) {
+        // Vec2 v = Core.input.mouseWorld(control.input.getMouseX(), control.input.getMouseY());
+        // return hide || (control.input.isPlacing() || control.input.isBreaking() && v.within(x, y, 150f));
+        
+        return hide || (Core.settings.getBool("buildhideunit", false) && (control.input.isPlacing() || control.input.isBreaking()));
+    }
+
     //region drawing
 
     public void draw(Unit unit){
@@ -435,6 +507,18 @@ public class UnitType extends UnlockableContent{
             drawControl(unit);
         }
 
+        if(isHiding(unit)) {
+            Draw.z(Math.min(Layer.darkness, z - 1f));
+            drawShadow2(unit);
+
+            if(mech != null){
+                //side
+                legOffset.trns(mech.baseRotation(), 0f, Mathf.lerp(Mathf.sin(mech.walkExtend(true), 2f/Mathf.PI, 1) * mechSideSway, 0f, unit.elevation));
+                //front
+                legOffset.add(Tmp.v1.trns(mech.baseRotation() + 90, 0f, Mathf.lerp(Mathf.sin(mech.walkExtend(true), 1f/Mathf.PI, 1) * mechFrontSway, 0f, unit.elevation)));
+                unit.trns(legOffset.x, legOffset.y);
+            }
+        } else {
         if(unit.isFlying() || visualElevation > 0){
             Draw.z(Math.min(Layer.darkness, z - 1f));
             drawShadow(unit);
@@ -477,7 +561,7 @@ public class UnitType extends UnlockableContent{
         drawWeapons(unit);
         if(drawItems) drawItems(unit);
         drawLight(unit);
-
+        }
         if(unit.shieldAlpha > 0 && drawShields){
             drawShield(unit);
         }
@@ -525,6 +609,12 @@ public class UnitType extends UnlockableContent{
         Draw.rect(shadowRegion, unit.x + shadowTX * e, unit.y + shadowTY * e, unit.rotation - 90);
         Draw.color();
     }
+
+    public void drawShadow2(Unit unit){
+        Draw.color(Pal.shadow);
+        Draw.rect(shadowRegion, unit.x, unit.y, unit.rotation - 90);
+        Draw.color();
+  }
 
     public void drawSoftShadow(Unit unit){
         Draw.color(0, 0, 0, 0.4f);

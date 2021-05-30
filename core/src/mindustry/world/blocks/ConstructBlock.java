@@ -53,6 +53,9 @@ public class ConstructBlock extends Block{
 
     @Remote(called = Loc.server)
     public static void deconstructFinish(Tile tile, Block block, Unit builder){
+      if (builder != null && builder.isPlayer()) {
+        mindustry.Vars.tileInfoManagement.addInfo(builder.getPlayer(), mindustry.game.griefprevention.TileInfo.ActionType.breakBlock, tile, block);
+      }
         Team team = tile.team();
         Fx.breakBlock.at(tile.drawx(), tile.drawy(), block.size);
         Events.fire(new BlockBuildEndEvent(tile, builder, team, true, null));
@@ -92,6 +95,13 @@ public class ConstructBlock extends Block{
 
         Fx.placeBlock.at(tile.drawx(), tile.drawy(), block.size);
         if(shouldPlay()) Sounds.place.at(tile, calcPitch(true));
+
+        if(builder != null && builder.isPlayer()){
+            mindustry.Vars.tileInfoManagement.addInfo(builder.getPlayer(), mindustry.game.griefprevention.TileInfo.ActionType.placeBlock, tile, block);
+        }
+        if(net.active()) {
+            Events.fire(new BlockBuildEndEvent(tile, builder, team, false, config));
+        }
     }
 
     static boolean shouldPlay(){
@@ -123,8 +133,9 @@ public class ConstructBlock extends Block{
         if(tile.build != null){
             tile.build.placed();
         }
-
-        Events.fire(new BlockBuildEndEvent(tile, builder, team, false, config));
+        if(!net.active()) {
+            Events.fire(new BlockBuildEndEvent(tile, builder, team, false, config));
+        }
     }
 
     @Override

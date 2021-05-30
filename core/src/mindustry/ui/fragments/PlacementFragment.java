@@ -22,6 +22,7 @@ import mindustry.type.*;
 import mindustry.ui.*;
 import mindustry.world.*;
 import mindustry.world.blocks.ConstructBlock.*;
+import java.time.Instant;
 
 import static mindustry.Vars.*;
 
@@ -29,6 +30,7 @@ public class PlacementFragment extends Fragment{
     final int rowWidth = 4;
 
     public Category currentCategory = Category.distribution;
+    private Instant lastUnitTime = Instant.now();
 
     Seq<Block> returnArray = new Seq<>(), returnArray2 = new Seq<>();
     Seq<Category> returnCatArray = new Seq<>();
@@ -456,8 +458,21 @@ public class PlacementFragment extends Fragment{
         //if the mouse intersects the table or the UI has the mouse, no hovering can occur
         if(Core.scene.hasMouse() || topTable.hit(v.x, v.y, false) != null) return null;
 
-        //check for a unit
-        Unit unit = Units.closestOverlap(player.team(), Core.input.mouseWorldX(), Core.input.mouseWorldY(), 5f, u -> !u.isLocal());
+        Unit unit = null;
+        if(!UnitType.isHiding()) {
+            unit = hoveredUnit(Core.input.mouseWorld().x, Core.input.mouseWorld().y);
+        }
+        if(Core.input.keyTap(Binding.select)) {
+            if(unit != null) {
+                lastUnitTime = Instant.now().plusSeconds(3);
+            } else {
+                lastUnitTime = Instant.now();
+            }
+        }
+        if(lastUnitTime.isAfter(Instant.now()) && hover instanceof Unit) {
+            return hover;
+        }
+
         //if cursor has a unit, display it
         if(unit != null) return unit;
 
@@ -478,4 +493,14 @@ public class PlacementFragment extends Fragment{
 
         return null;
     }
+    public Unit hoveredUnit(float x, float y) {
+        Unit unit = null;
+        //check for a unit
+        unit = Units.closestOverlap(player.team(), x, y, 5f, u -> !u.isLocal());
+        //check for a enemy unit
+        if (unit == null) {
+            unit = Units.closestEnemyOverlap(player.team(), x, y, 5f, u -> !u.isLocal());
+        }
+        return unit;
+    }   
 }

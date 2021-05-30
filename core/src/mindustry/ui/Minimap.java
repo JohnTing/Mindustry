@@ -19,7 +19,7 @@ public class Minimap extends Table{
 
         add(new Element(){
             {
-                setSize(Scl.scl(140f));
+                setSize(Scl.scl(280f));
             }
 
             @Override
@@ -42,7 +42,7 @@ public class Minimap extends Table{
 
                 clipEnd();
             }
-        }).size(140f);
+        }).size(280f);
 
         margin(margin);
 

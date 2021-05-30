@@ -15,6 +15,8 @@ import mindustry.type.*;
 import mindustry.world.consumers.*;
 import mindustry.world.meta.*;
 
+import mindustry.type.UnitType;
+
 import static mindustry.Vars.*;
 
 public class TractorBeamTurret extends BaseTurret{
@@ -134,6 +136,9 @@ public class TractorBeamTurret extends BaseTurret{
 
         @Override
         public void draw(){
+
+            if(UnitType.isHiding()) return;
+
             Draw.rect(baseRegion, x, y);
             Drawf.shadow(region, x - (size / 2f), y - (size / 2f), rotation - 90);
             Draw.rect(region, x, y, rotation - 90);

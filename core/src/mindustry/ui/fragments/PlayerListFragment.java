@@ -1,15 +1,21 @@
 package mindustry.ui.fragments;
 
 import arc.*;
+import arc.graphics.Color;
+import arc.graphics.Texture.TextureWrap;
 import arc.graphics.g2d.*;
 import arc.scene.*;
 import arc.scene.event.*;
 import arc.scene.ui.*;
+import arc.scene.ui.Button.ButtonStyle;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
+import mindustry.Vars;
 import mindustry.gen.*;
 import mindustry.graphics.*;
+import mindustry.input.DesktopInput;
+import mindustry.input.MobileInput;
 import mindustry.net.*;
 import mindustry.net.Packets.*;
 import mindustry.ui.*;
@@ -107,7 +113,27 @@ public class PlayerListFragment extends Fragment{
                 }
             };
             table.margin(8);
-            table.add(new Image(user.icon()).setScaling(Scaling.bounded)).grow();
+            // table.add(new Image(user.icon()).setScaling(Scaling.bounded)).grow();
+
+            ImageButton usericon = new ImageButton(user.icon());
+            
+            usericon.getImageCell().size(55);
+
+            usericon.tapped(() -> {
+                if (Vars.control.input instanceof DesktopInput input) {
+                    if (input.freecam == 0) {
+                        input.freecam = 1;
+                    }
+                    input.cameraTarget.set(user.x(), user.y());
+                }
+                else if (Vars.control.input instanceof MobileInput input) {
+                    Core.camera.position.set(user.x(), user.y());
+                }
+                this.toggle();
+            });
+            
+            table.add(usericon);
+            
             table.name = user.name();
 
             button.add(table).size(h);

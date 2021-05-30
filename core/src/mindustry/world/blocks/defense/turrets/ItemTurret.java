@@ -1,6 +1,9 @@
 package mindustry.world.blocks.defense.turrets;
 
 import arc.*;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Lines;
+import arc.math.Mathf;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.io.*;
@@ -176,6 +179,33 @@ public class ItemTurret extends Turret{
                     ammo.add(new ItemEntry(item, a));
                 }
             }
+        }
+
+        float bulletRange(BulletType type) {
+
+            float lifeScl = type.scaleVelocity ? range / type.range() : 1f;
+            float blocksize = block.size * tilesize / 2f;
+            return Math.max(type.speed * type.lifetime * (1f - type.drag), type.maxRange) * (1f + velocityInaccuracy) * lifeScl + blocksize;
+        }
+
+        @Override
+        public void drawSelect(){
+
+            if (ammo.size > 0) {
+                BulletType type = ammo.peek().type();
+
+                //float lifeScl = type.scaleVelocity ? range / type.range() : 1f;
+                //float crange = type.range() * lifeScl * (1f + velocityInaccuracy);
+                float crange = Math.max(bulletRange(type), type.range());
+                
+                Draw.color(team.color);
+                Draw.alpha(0.5f);
+                Lines.dashCircle(x, y, crange);
+                Draw.reset();
+                
+            }
+
+            Drawf.dashCircle(x, y, range, team.color);
         }
     }
 
