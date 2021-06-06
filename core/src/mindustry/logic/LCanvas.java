@@ -10,13 +10,16 @@ import arc.math.geom.*;
 import arc.scene.*;
 import arc.scene.event.*;
 import arc.scene.ui.*;
+import arc.scene.ui.TextButton.TextButtonStyle;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
 import mindustry.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
+import mindustry.logic.LStatements.InvalidStatement;
 import mindustry.ui.*;
+import mindustry.ui.dialogs.BaseDialog;
 
 public class LCanvas extends Table{
     public static final int maxJumpsDrawn = 100;
@@ -336,6 +339,9 @@ public class LCanvas extends Table{
                 t.add(st.name()).style(Styles.outlineLabel).color(color).padRight(8);
                 t.add().growX();
 
+                t.button(Icon.add, Styles.logici, () -> adddAfter()
+                ).size(24f).padRight(6).disabled(t2 -> canvas.statements.getChildren().size >= LExecutor.maxInstructions);
+
                 t.button(Icon.copy, Styles.logici, () -> {
                 }).size(24f).padRight(6).get().tapped(this::copy);
 
@@ -405,6 +411,30 @@ public class LCanvas extends Table{
                 copy.elem = s;
                 copy.setupUI();
             }
+        }
+
+        public void adddAfter(){
+            BaseDialog dialog = new BaseDialog("@add");
+            dialog.cont.pane(t2 -> {
+                t2.background(Tex.button);
+                int i = 0;
+                    for(Prov<LStatement> prov : LogicIO.allStatements){
+                        LStatement example = prov.get();
+                        if(example instanceof InvalidStatement || example.hidden()) continue;
+    
+                        TextButtonStyle style = new TextButtonStyle(Styles.cleart);
+                        style.fontColor = example.color();
+                        style.font = Fonts.outline;
+    
+                        t2.button(example.name(), style, () -> {
+                            statements.addChildAfter(StatementElem.this, new StatementElem(prov.get()));
+                            dialog.hide();
+                        }).size(140f, 50f);
+                        if(++i % 2 == 0) t2.row();
+                }
+            });
+            dialog.addCloseButton();
+            dialog.show();
         }
 
         @Override

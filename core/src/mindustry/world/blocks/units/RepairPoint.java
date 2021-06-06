@@ -72,6 +72,9 @@ public class RepairPoint extends Block{
 
         @Override
         public void draw(){
+
+            if(mindustry.game.griefprevention.GriefWarnings.isHiding()) return;
+
             Draw.rect(baseRegion, x, y);
 
             Draw.z(Layer.turret);

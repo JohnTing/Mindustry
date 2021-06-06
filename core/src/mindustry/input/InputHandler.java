@@ -13,6 +13,7 @@ import arc.scene.event.*;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
+import mindustry.Vars;
 import mindustry.ai.formations.patterns.*;
 import mindustry.annotations.Annotations.*;
 import mindustry.content.*;
@@ -32,9 +33,13 @@ import mindustry.ui.fragments.*;
 import mindustry.world.*;
 import mindustry.world.blocks.ConstructBlock.*;
 import mindustry.world.blocks.*;
+import mindustry.world.blocks.defense.turrets.BaseTurret;
+import mindustry.world.blocks.defense.turrets.Turret;
+import mindustry.world.blocks.defense.turrets.Turret.TurretBuild;
 import mindustry.world.blocks.distribution.*;
 import mindustry.world.blocks.payloads.*;
 import mindustry.world.blocks.storage.CoreBlock.*;
+import mindustry.world.blocks.units.UnitFactory;
 import mindustry.world.meta.*;
 
 import java.util.*;
@@ -307,6 +312,9 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
         }
 
         if(player != null) build.lastAccessed = player.name;
+        if(player != null){
+            mindustry.Vars.tileInfoManagement.addInfo(player, mindustry.game.griefprevention.TileInfo.ActionType.rotate, build.tile(), build.block);
+        }
         build.rotation = Mathf.mod(build.rotation + Mathf.sign(direction), 4);
         build.updateProximity();
         build.noSleep();
@@ -318,6 +326,14 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
         if(build == null) return;
         if(net.server() && (!Units.canInteract(player, build) ||
             !netServer.admins.allowAction(player, ActionType.configure, build.tile, action -> action.config = value))) throw new ValidateException(player, "Player cannot configure a tile.");
+
+        if (value instanceof Integer integer) {
+            Building other = world.build(integer);
+            boolean contains = build.power != null && build.power.links != null && build.power.links.contains(integer);
+            if (contains) {
+                mindustry.Vars.tileInfoManagement.checkPowerSplit(build, player);
+            }
+        }
         build.configured(player == null || player.dead() ? null : player.unit(), value);
         Core.app.post(() -> Events.fire(new ConfigEvent(build, player, value)));
     }
@@ -915,7 +931,13 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
         //consume tap event if necessary
         if(build.interactable(player.team()) && build.block.consumesTap){
             consumed = true;
-        }else if(build.interactable(player.team()) && build.block.synthetic() && !consumed){
+        // }else if(build.interactable(player.team()) && build.block.synthetic() && !consumed){
+        }else if(build.block.synthetic() && (
+            !consumed || 
+            build.block() instanceof UnitFactory || 
+            build.block() instanceof MassDriver || 
+            build.block() instanceof ItemBridge
+            )){
             if(build.block.hasItems && build.items.total() > 0){
                 frag.inv.showFor(build);
                 consumed = true;
@@ -973,7 +995,8 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
         return !Core.scene.hasMouse()
             && tile.drop() != null
             && player.unit().validMine(tile)
-            && !(tile.floor().playerUnmineable && tile.overlay().itemDrop == null)
+            // && !(tile.floor().playerUnmineable && tile.overlay().itemDrop == null)
+            && (!(tile.floor().playerUnmineable && tile.overlay().itemDrop == null) || Core.input.keyDown(Binding.control) )
             && player.unit().acceptsItem(tile.drop())
             && tile.block() == Blocks.air;
     }
@@ -1024,6 +1047,7 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
     }
 
     public @Nullable Unit selectedUnit(){
+        if(!mindustry.game.griefprevention.GriefWarnings.isHiding()) {
         Unit unit = Units.closest(player.team(), Core.input.mouseWorld().x, Core.input.mouseWorld().y, 40f, Unitc::isAI);
         if(unit != null){
             unit.hitbox(Tmp.r1);
@@ -1031,6 +1055,7 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
             if(Tmp.r1.contains(Core.input.mouseWorld())){
                 return unit;
             }
+        }
         }
 
         Building build = world.buildWorld(Core.input.mouseWorld().x, Core.input.mouseWorld().y);
@@ -1239,5 +1264,45 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
     static class PlaceLine{
         public int x, y, rotation;
         public boolean last;
+    }
+
+    Seq<TurretBuild> tbs = new Seq<TurretBuild>();
+    void drawNearbyTurret() {
+
+        if(!isPlacing() && !isUsingSchematic()) {
+            return;
+        }
+        float range = 36f;
+        if(isUsingSchematic() && !isPlacing()) {
+            range *= 2f;
+        }
+
+        Seq<Tile> enemyTile = indexer.getEnemy(player.team(), BlockFlag.turret);
+        
+        if(enemyTile.size <= 0) {
+            return;
+        }
+        tbs.clear();
+        int number = 0;
+        for(Tile tile : enemyTile) {
+            if(tile.build instanceof TurretBuild turret) {
+                float dst = tile.dst(Core.input.mouseWorld());
+                if(turret.hasAmmo() && dst < turret.range() + range) {
+                    number += 1;
+                    tbs.add(turret);
+                }
+            }
+        }
+        
+        for(TurretBuild tb : tbs) {
+            Lines.stroke(3f, Pal.gray);
+            Draw.alpha(Math.max(0.0f, 0.5f - tbs.size * 0.03f));
+            Lines.dashCircle(tb.getX(), tb.getY(), tb.range());
+
+            Lines.stroke(1f, tb.team().color);
+            Draw.alpha(Math.max(0.3f, 1f - tbs.size * 0.05f));
+            Lines.dashCircle(tb.getX(), tb.getY(), tb.range());
+        }
+        Draw.reset();
     }
 }
